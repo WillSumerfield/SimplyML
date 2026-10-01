@@ -13,6 +13,8 @@ struct ValueFormat
         Number,   // fixed decimals
         Duration, // seconds as "1 day, 2 hours"
         Percent,  // ratio 0..1 as "42.0%"
+        Scientific, // "1.0e-03"
+        General,  // shortest of fixed/scientific with `decimals` significant digits ("0.001", "1e-05")
     };
 
     Kind        kind     = Kind::Number;
@@ -51,6 +53,20 @@ struct ValueFormat
         ValueFormat f;
         f.kind     = Kind::Percent;
         f.decimals = decimals;
+        return f;
+    }
+    [[nodiscard]] static ValueFormat scientific(int decimals = 1)
+    {
+        ValueFormat f;
+        f.kind     = Kind::Scientific;
+        f.decimals = decimals;
+        return f;
+    }
+    [[nodiscard]] static ValueFormat general(int digits = 6)
+    {
+        ValueFormat f;
+        f.kind     = Kind::General;
+        f.decimals = digits;
         return f;
     }
 };

@@ -17,6 +17,9 @@ TEST_CASE("ValueFormat kinds")
     CHECK(sml::ValueFormat::duration()(3725) == "1 hour, 2 minutes");
     CHECK(sml::ValueFormat::number(2, " s")(1.5) == "1.50 s");
     CHECK(sml::ValueFormat::number(2)(std::nan("")) == "nan");
+    CHECK(sml::ValueFormat::scientific(1)(0.00123) == "1.2e-03");
+    CHECK(sml::ValueFormat::general(3)(0.001) == "0.001");
+    CHECK(sml::ValueFormat::general(3)(1e-5) == "1e-05");
     sml::ValueFormat custom;
     custom.custom = [](double v) { return v > 0 ? "up" : "down"; };
     CHECK(custom(1.0) == "up");

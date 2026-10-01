@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 
 #include "simplyml/util/format.hpp"
 
@@ -21,6 +22,14 @@ std::string ValueFormat::operator()(double v) const
         case Kind::Percent:
             body = toString(v * 100.0, decimals) + "%";
             break;
+        case Kind::Scientific:
+        case Kind::General: {
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), kind == Kind::Scientific ? "%.*e" : "%.*g",
+                          std::max(decimals, kind == Kind::General ? 1 : 0), v);
+            body = buf;
+            break;
+        }
         case Kind::Number:
             if (!std::isfinite(v)) {
                 body = std::isnan(v) ? "nan" : (v > 0 ? "inf" : "-inf");
