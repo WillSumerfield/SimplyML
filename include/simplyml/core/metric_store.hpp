@@ -53,6 +53,7 @@ public:
     void push(std::string_view name, double step, double value);
     /// Step = previous step of this series + 1 (0 for the first point).
     void push(std::string_view name, double value);
+    /// `steps` may be nullptr: auto steps, as in `push(name, value)`.
     void pushMany(std::string_view name, double const* steps, double const* values, std::size_t count);
     /// Keeps only the newest `maxPoints` (0 = unlimited, the default). Applied on the next sync.
     void setMaxPoints(std::string_view name, std::size_t maxPoints);

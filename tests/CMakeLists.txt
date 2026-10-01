@@ -25,6 +25,7 @@ add_executable(test_core
     core/test_clock.cpp
     core/test_default_font.cpp
     core/test_event_bus.cpp
+    core/test_keys.cpp
     core/test_metric_store.cpp
     core/test_resources.cpp
     core/test_snapshot.cpp)

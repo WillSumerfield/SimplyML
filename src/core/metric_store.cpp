@@ -70,9 +70,9 @@ void MetricStore::pushMany(std::string_view name, double const* steps, double co
     Pending& p = pending(name);
     p.points.reserve(p.points.size() + count);
     for (std::size_t i = 0; i < count; ++i) {
-        p.points.push_back({steps[i], values[i]});
+        p.lastStep = steps ? steps[i] : p.lastStep + 1.0;
+        p.points.push_back({p.lastStep, values[i]});
     }
-    p.lastStep = steps[count - 1];
 }
 
 void MetricStore::setMaxPoints(std::string_view name, std::size_t maxPoints)

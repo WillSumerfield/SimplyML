@@ -64,6 +64,7 @@ add_library(simplyml_core STATIC
     src/core/app.cpp
     src/core/camera.cpp
     src/core/event_bus.cpp
+    src/core/keys.cpp
     src/core/metric_store.cpp
     src/core/resources.cpp
     ${SIMPLYML_FONT_CPP})

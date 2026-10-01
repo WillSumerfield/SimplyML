@@ -203,6 +203,7 @@ void App::loop(UpdateFn const& update)
         }
         m_window->display();
     }
+    m_store.sync(); // dumps after close see every point pushed so far
     destroyWindow();
 }
 

@@ -52,6 +52,21 @@ TEST_CASE("MetricStore: pushMany, maxPoints and total")
     CHECK(s->maxPoints() == 3);
 }
 
+TEST_CASE("MetricStore: pushMany without steps continues the auto step")
+{
+    sml::MetricStore store;
+    store.push("x", 5.0, 1.0);
+    std::vector<double> vals{2, 3};
+    store.pushMany("x", nullptr, vals.data(), vals.size());
+    store.push("x", 4.0);
+    store.sync();
+    auto const& p = store.series("x")->points();
+    REQUIRE(p.size() == 4);
+    CHECK(p[1].step == 6.0);
+    CHECK(p[2].step == 7.0);
+    CHECK(p[3].step == 8.0);
+}
+
 TEST_CASE("MetricStore: clear drops synced and pending data")
 {
     sml::MetricStore store;
