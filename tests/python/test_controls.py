@@ -5,7 +5,7 @@ import pytest
 
 import simplyml
 
-needs_display = pytest.mark.skipif(not os.environ.get("DISPLAY"), reason="needs an X display")
+needs_display = pytest.mark.skipif(not os.environ.get("DISPLAY"), reason="needs an X display (XTest input)")
 
 
 def build(app, log=None):

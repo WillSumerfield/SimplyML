@@ -1,11 +1,14 @@
 import os
+import sys
 import time
 
 import pytest
 
 import simplyml
 
-needs_display = pytest.mark.skipif(not os.environ.get("DISPLAY"), reason="needs an X display")
+needs_display = pytest.mark.skipif(
+    sys.platform != "win32" and not os.environ.get("DISPLAY"), reason="needs a display"
+)
 
 
 def build(app):

@@ -6,7 +6,7 @@ import pytest
 
 import simplyml
 
-needs_display = pytest.mark.skipif(not os.environ.get("DISPLAY"), reason="needs an X display")
+needs_display = pytest.mark.skipif(not os.environ.get("DISPLAY"), reason="needs an X display (XTest input)")
 
 
 def test_store_accepts_scalars_arrays_and_lists(tmp_path):
