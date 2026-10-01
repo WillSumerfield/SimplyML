@@ -9,3 +9,7 @@ simplyml_warnings(layout)
 add_executable(dashboard cpp/dashboard/main.cpp)
 target_link_libraries(dashboard PRIVATE SimplyML::SimplyML)
 simplyml_warnings(dashboard)
+
+add_executable(controls cpp/controls/main.cpp)
+target_link_libraries(controls PRIVATE SimplyML::SimplyML)
+simplyml_warnings(controls)
