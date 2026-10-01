@@ -25,6 +25,7 @@ public:
     LineChart& addSeries(std::string name, sf::Color color = sf::Color::Transparent, std::string label = {});
     /// Shows only the newest `points` of each series (0 = all, the default).
     LineChart& setWindow(std::size_t points)      { m_window = points; m_dirty = true; return *this; }
+    /// Fill under the line (single-series charts only; default on).
     LineChart& setArea(bool area)                 { m_area = area; m_dirty = true; return *this; }
     /// Fixed y range; `setAutoY` returns to fitting the data.
     LineChart& setYRange(double lo, double hi);

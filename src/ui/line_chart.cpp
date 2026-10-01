@@ -236,10 +236,10 @@ void LineChart::rebuild(UiContext const& ctx)
             geo::circle(m_mesh, pts[0], width, color, 16);
             continue;
         }
-        if (m_area) {
+        if (m_area && single) { // overlapping fills of several series turn muddy
             // Fill fades with |value| relative to the largest visible magnitude, as in the original.
             tops.resize(pts.size());
-            float const maxAlpha = single ? 150.0f : 60.0f;
+            float const maxAlpha = 150.0f;
             for (std::size_t k = 0; k < pts.size(); ++k) {
                 double const v     = m_map.y0 + (bottom - pts[k].y) / m_map.rect.size.y * (m_map.y1 - m_map.y0);
                 float const  ratio = maxAbs > 0.0 ? static_cast<float>(std::abs(v) / maxAbs) : 0.0f;
