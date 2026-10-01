@@ -10,6 +10,7 @@
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
 
+#include "py_app.hpp"
 #include "simplyml/core/app.hpp"
 #include "simplyml/core/keys.hpp"
 #include "simplyml/core/metric_store.hpp"
@@ -51,6 +52,7 @@ bool isMouse(sml::AppEvent const& e)
 NB_MODULE(_core, m)
 {
     m.doc() = "SimplyML native core";
+    bindUi(m);
 
     m.def("key_names", [] {
         std::vector<std::string> out;
@@ -118,11 +120,14 @@ NB_MODULE(_core, m)
         .def("write_binary", [](sml::MetricStore const& s, std::string const& path) { s.writeBinary(path); }, "path"_a,
             "Writes synced points in SimplyML's binary format.");
 
-    nb::class_<sml::App>(m, "App",
+    nb::class_<PyApp>(m, "App",
         "Dashboard window. `start()` runs it on its own thread, so the calling Python loop never blocks it.")
-        .def("__init__", [](sml::App* self, std::string title, std::pair<unsigned, unsigned> size, bool fullscreen,
+        .def("__init__", [](PyApp* self, std::string title, std::pair<unsigned, unsigned> size, bool fullscreen,
                              unsigned fpsLimit, unsigned antialiasing, bool escToQuit, bool cameraControls,
-                             std::tuple<std::uint8_t, std::uint8_t, std::uint8_t> clearColor) {
+                             std::optional<std::tuple<std::uint8_t, std::uint8_t, std::uint8_t>> clearColor,
+                             float scale) {
+            sml::Theme theme;
+            theme.scale = scale;
             sml::AppConfig c;
             c.title          = std::move(title);
             c.size           = {size.first, size.second};
@@ -131,26 +136,27 @@ NB_MODULE(_core, m)
             c.antialiasing   = antialiasing;
             c.escToQuit      = escToQuit;
             c.cameraControls = cameraControls;
-            c.clearColor     = {std::get<0>(clearColor), std::get<1>(clearColor), std::get<2>(clearColor)};
-            new (self) sml::App(std::move(c));
-            self->events().setQueueEnabled(true); // Python reads input through poll_events()
+            c.clearColor     = clearColor ? sf::Color{std::get<0>(*clearColor), std::get<1>(*clearColor), std::get<2>(*clearColor)}
+                                          : theme.palette.clear;
+            new (self) PyApp(std::move(c), theme);
         },
             "title"_a = "SimplyML", "size"_a = std::make_pair(1600u, 900u), "fullscreen"_a = false,
-            "fps_limit"_a = 60u, "antialiasing"_a = 4u, "esc_to_quit"_a = false, "camera_controls"_a = true,
-            "clear_color"_a = std::make_tuple(std::uint8_t{80}, std::uint8_t{80}, std::uint8_t{80}))
-        .def("start", [](sml::App& a) { a.start(); }, "Opens the window and runs the UI on a background thread.")
-        .def("close", &sml::App::close, "Asks the UI thread to close the window; returns immediately.")
-        .def("join", &sml::App::join, nb::call_guard<nb::gil_scoped_release>(),
+            "fps_limit"_a = 60u, "antialiasing"_a = 4u, "esc_to_quit"_a = false, "camera_controls"_a = false,
+            "clear_color"_a = nb::none(), "scale"_a = 1.0f,
+            "`scale` multiplies every size in the theme (text, padding, outlines).")
+        .def("start", [](PyApp& a) { a.app.start(); }, "Opens the window and runs the UI on a background thread.")
+        .def("close", [](PyApp& a) { a.app.close(); }, "Asks the UI thread to close the window; returns immediately.")
+        .def("join", [](PyApp& a) { a.app.join(); }, nb::call_guard<nb::gil_scoped_release>(),
             "Blocks until the UI thread ends; re-raises its error, if any.")
-        .def_prop_ro("is_running", &sml::App::isRunning)
-        .def("poll_events", [](sml::App& a) { return a.events().drain(); },
+        .def_prop_ro("is_running", [](PyApp const& a) { return a.app.isRunning(); })
+        .def("poll_events", [](PyApp& a) { return a.app.events().drain(); },
             "Takes all queued events (unconsumed input, window close, custom), oldest first.")
-        .def("post_event", [](sml::App& a, std::string name) {
+        .def("post_event", [](PyApp& a, std::string name) {
             sml::AppEvent e;
             e.name = std::move(name);
-            a.events().post(std::move(e));
+            a.app.events().post(std::move(e));
         }, "name"_a, "Queues a custom event, as widgets will.")
-        .def("set_fps_limit", &sml::App::setFpsLimit, "fps"_a, "0 = unlimited.")
-        .def("set_fullscreen", &sml::App::setFullscreen, "fullscreen"_a)
-        .def_prop_ro("store", &sml::App::store, nb::rv_policy::reference_internal);
+        .def("set_fps_limit", [](PyApp& a, unsigned fps) { a.app.setFpsLimit(fps); }, "fps"_a, "0 = unlimited.")
+        .def("set_fullscreen", [](PyApp& a, bool f) { a.app.setFullscreen(f); }, "fullscreen"_a)
+        .def_prop_ro("store", [](PyApp& a) -> sml::MetricStore& { return a.app.store(); }, nb::rv_policy::reference_internal);
 }

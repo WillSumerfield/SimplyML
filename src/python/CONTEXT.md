@@ -6,7 +6,8 @@ The `simplyml` Python package: the native module plus a thin Pythonic layer. Tra
 
 Sits on `core` (and later `ui`, `ml`). Exposes the same concepts as C++, renamed to Python conventions.
 
-- **module**: the native module's bindings.
+- **module**: the native module's bindings: App, events, store.
+- **ui_bindings**: widget handles and the layout-building methods.
 - **python/simplyml**: the importable package wrapping the native module.
 
 ## Language
@@ -21,3 +22,10 @@ _Avoid_: Listen, callback
 
 **Key Name**:
 The lowercase string identifying a key in events and bindings (e.g. "space", "f1", "7").
+
+**Handle**:
+A Python object pointing at one widget in an App's layout; it keeps the App alive, not the widget.
+_Avoid_: Proxy, reference
+
+**Format Spec**:
+The short string choosing a Value Format from Python (".3", "04d", ".1%", "duration").
