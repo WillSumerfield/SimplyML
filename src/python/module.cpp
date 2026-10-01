@@ -137,7 +137,7 @@ NB_MODULE(_core, m)
         },
             "title"_a = "SimplyML", "size"_a = std::make_pair(1600u, 900u), "fullscreen"_a = false,
             "fps_limit"_a = 60u, "antialiasing"_a = 4u, "esc_to_quit"_a = false, "camera_controls"_a = true,
-            "clear_color"_a = std::make_tuple(std::uint8_t{30}, std::uint8_t{30}, std::uint8_t{30}))
+            "clear_color"_a = std::make_tuple(std::uint8_t{80}, std::uint8_t{80}, std::uint8_t{80}))
         .def("start", [](sml::App& a) { a.start(); }, "Opens the window and runs the UI on a background thread.")
         .def("close", &sml::App::close, "Asks the UI thread to close the window; returns immediately.")
         .def("join", &sml::App::join, nb::call_guard<nb::gil_scoped_release>(),

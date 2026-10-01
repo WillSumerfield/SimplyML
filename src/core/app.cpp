@@ -1,5 +1,6 @@
 #include "simplyml/core/app.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -101,9 +102,16 @@ void App::post(Task task)
     m_tasks.push_back(std::move(task));
 }
 
-void App::onDraw(DrawFn draw)
+std::uint64_t App::onDraw(DrawFn draw)
 {
-    m_draws.push_back(std::move(draw));
+    m_draws.emplace_back(m_nextDraw, std::move(draw));
+    return m_nextDraw++;
+}
+
+void App::removeDraw(std::uint64_t id)
+{
+    m_draws.erase(std::remove_if(m_draws.begin(), m_draws.end(), [id](auto const& d) { return d.first == id; }),
+                  m_draws.end());
 }
 
 void App::setFpsLimit(unsigned fps)
@@ -198,8 +206,9 @@ void App::loop(UpdateFn const& update)
 
         m_window->clear(m_config.clearColor);
         Canvas canvas{*m_window, m_camera};
-        for (auto const& draw : m_draws) {
-            draw(canvas);
+        for (std::size_t i = 0; i < m_draws.size(); ++i) { // index: a callback may add/remove draws
+            auto const fn = m_draws[i].second;
+            fn(canvas);
         }
         m_window->display();
     }

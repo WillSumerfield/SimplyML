@@ -7,6 +7,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include <SFML/Graphics/Color.hpp>
@@ -36,7 +37,7 @@ struct AppConfig
     unsigned     antialiasing   = 4;
     bool         escToQuit      = false;
     bool         cameraControls = true; // drag to pan, wheel to zoom
-    sf::Color    clearColor     = {30, 30, 30};
+    sf::Color    clearColor     = {80, 80, 80}; // Theme palette.clear
 };
 
 /// Owns the window, render loop, camera, resources, events and metric store. No global state:
@@ -73,8 +74,9 @@ public:
 
     /// Runs `task` on the UI thread at the start of the next frame (or the first one, if not running).
     void post(Task task);
-    /// Draw callbacks run in order each frame, after update.
-    void onDraw(DrawFn draw);
+    /// Draw callbacks run in order each frame, after update. UI thread, or before starting.
+    std::uint64_t onDraw(DrawFn draw);
+    void          removeDraw(std::uint64_t id);
 
     void setFpsLimit(unsigned fps);
     /// Toggles between the configured limit and unlimited.
@@ -113,7 +115,8 @@ private:
 
     std::unique_ptr<sf::RenderWindow> m_window;
     sf::Vector2f                      m_mouse;
-    std::vector<DrawFn>               m_draws;
+    std::vector<std::pair<std::uint64_t, DrawFn>> m_draws;
+    std::uint64_t                     m_nextDraw = 1;
 
     std::mutex        m_taskMutex;
     std::vector<Task> m_tasks;
