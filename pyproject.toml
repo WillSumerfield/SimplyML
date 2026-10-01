@@ -1,0 +1,31 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "nanobind>=2.4"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "simplyml"
+version = "0.1.0"
+description = "Live ML-training dashboards: C++/SFML core with Python bindings"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10,<3.13"
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "python-xlib>=0.33"]
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/py-{wheel_tag}" # persistent: SFML isn't rebuilt on every install
+wheel.packages = ["python/simplyml"]
+cmake.build-type = "Release"
+editable.rebuild = false
+install.components = ["python"] # skip the C++ install rules
+
+[tool.scikit-build.cmake.define]
+SIMPLYML_BUILD_TESTS = "OFF"
+SIMPLYML_BUILD_EXAMPLES = "OFF"
+SIMPLYML_BUILD_PYTHON = "ON"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]

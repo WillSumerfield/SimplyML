@@ -12,6 +12,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON) # static libs end up in the Python exten
 
 option(SIMPLYML_BUILD_TESTS "Build SimplyML tests" ${PROJECT_IS_TOP_LEVEL})
 option(SIMPLYML_BUILD_EXAMPLES "Build SimplyML examples" ${PROJECT_IS_TOP_LEVEL})
+option(SIMPLYML_BUILD_PYTHON "Build the Python extension (set by pyproject.toml)" OFF)
 
 include(FetchContent)
 include(GNUInstallDirs)
@@ -79,6 +80,11 @@ add_library(simplyml INTERFACE)
 add_library(SimplyML::SimplyML ALIAS simplyml)
 set_target_properties(simplyml PROPERTIES EXPORT_NAME SimplyML)
 target_link_libraries(simplyml INTERFACE simplyml_util simplyml_core)
+
+# python extension --------------------------------------------------------------------------------
+if(SIMPLYML_BUILD_PYTHON)
+    add_subdirectory(src/python)
+endif()
 
 # install / export ---------------------------------------------------------------------------------
 install(TARGETS simplyml_util simplyml_core simplyml EXPORT SimplyMLTargets)
