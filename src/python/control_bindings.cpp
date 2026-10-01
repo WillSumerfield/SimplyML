@@ -112,6 +112,7 @@ nb::object addControl(ContainerRef const& parent, nb::kwargs kw, std::optional<s
     if (!onChange.is_none()) {
         auto fn = hold(onChange);
         c.onChange([fn, kind = ref.kind, options = ref.options](double v) {
+            nb::gil_scoped_acquire gil; // toPython builds Python objects before callPython runs
             callPython(*fn, "simplyml on_change callback", toPython(kind, options, v));
         });
     }
