@@ -33,6 +33,14 @@ target_link_libraries(test_core PRIVATE SimplyML::core doctest::doctest)
 simplyml_warnings(test_core)
 doctest_discover_tests(test_core PROPERTIES TIMEOUT 60) # App tests open windows
 
+add_executable(test_ui
+    main.cpp
+    ui/test_geometry.cpp
+    ui/test_layout.cpp)
+target_link_libraries(test_ui PRIVATE SimplyML::ui doctest::doctest)
+simplyml_warnings(test_ui)
+doctest_discover_tests(test_ui PROPERTIES TIMEOUT 60)
+
 # Package test: install to a temp prefix, then build + run a consumer using find_package(SimplyML).
 set(pkg_prefix ${CMAKE_CURRENT_BINARY_DIR}/pkg-install)
 add_test(NAME package.install
