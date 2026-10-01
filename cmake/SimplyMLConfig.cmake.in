@@ -1,0 +1,12 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# SFML is built static and installed next to SimplyML.
+set(SFML_STATIC_LIBRARIES ON)
+if(NOT SFML_DIR AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/../SFML/SFMLConfig.cmake")
+    set(SFML_DIR "${CMAKE_CURRENT_LIST_DIR}/../SFML")
+endif()
+find_dependency(SFML 3 COMPONENTS Graphics)
+
+include("${CMAKE_CURRENT_LIST_DIR}/SimplyMLTargets.cmake")
+check_required_components(SimplyML)
