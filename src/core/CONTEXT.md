@@ -13,6 +13,7 @@ Sits on `util` and SFML; everything above it receives what it needs from an App 
 - **resources**: named fonts and textures, including the embedded default font.
 - **clock**: wall time and sim time.
 - **metric_store**: named metric series written from any thread.
+- **control_store**: named control values edited by widgets and read by training code.
 - **snapshot**: latest-value state written from any thread.
 - **keys**: stable names for keys and mouse buttons.
 - **default_font**: the embedded default font, so the library needs no files at runtime.
@@ -85,3 +86,10 @@ The once-per-frame hand-over of newly written points to what the UI reads.
 **Snapshot**:
 The latest value of some non-series state (e.g. training stats), written from any thread.
 _Avoid_: State, shared value
+
+**Control Store**:
+The named values that controls edit and training code reads back (learning rate, pause flag, ...).
+_Avoid_: Settings, params, config
+
+**Control Value**:
+One named number in the Control Store; any write gives it a new version so readers see the change.

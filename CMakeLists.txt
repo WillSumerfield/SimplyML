@@ -64,6 +64,7 @@ embedFile(${PROJECT_SOURCE_DIR}/res/fonts/ShareTechMono-Regular.ttf ${SIMPLYML_F
 add_library(simplyml_core STATIC
     src/core/app.cpp
     src/core/camera.cpp
+    src/core/control_store.cpp
     src/core/event_bus.cpp
     src/core/keys.cpp
     src/core/metric_store.cpp

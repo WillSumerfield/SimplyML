@@ -23,6 +23,7 @@ add_executable(test_core
     core/test_app.cpp
     core/test_camera.cpp
     core/test_clock.cpp
+    core/test_control_store.cpp
     core/test_default_font.cpp
     core/test_event_bus.cpp
     core/test_keys.cpp

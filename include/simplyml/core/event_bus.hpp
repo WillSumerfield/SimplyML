@@ -37,6 +37,7 @@ struct AppEvent
     sf::Mouse::Button button   = sf::Mouse::Button::Left;
     sf::Vector2i      position = {};
     std::string       name     = {};
+    double            value    = 0.0; // custom events from controls: the new value
 };
 
 /// Dispatches window events to any number of subscribers, highest priority first (ties in

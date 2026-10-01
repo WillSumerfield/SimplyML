@@ -16,6 +16,7 @@
 #include "simplyml/core/camera.hpp"
 #include "simplyml/core/canvas.hpp"
 #include "simplyml/core/clock.hpp"
+#include "simplyml/core/control_store.hpp"
 #include "simplyml/core/event_bus.hpp"
 #include "simplyml/core/metric_store.hpp"
 #include "simplyml/core/resources.hpp"
@@ -49,7 +50,7 @@ struct AppConfig
 ///   The window, GL context and event polling all live on that thread.
 ///
 /// Thread rules: `close`, `join`, `isRunning`, `post`, `setFpsLimit`, `setFullscreen`, `store()`
-/// writers and `events()` subscribe/drain are safe from any thread. Everything else (camera,
+/// writers, `controls()` and `events()` subscribe/drain are safe from any thread. Everything else (camera,
 /// resources, draw callbacks, window) belongs to the UI thread; reach it from elsewhere with
 /// `post`, or configure it before starting.
 class App
@@ -89,6 +90,7 @@ public:
     [[nodiscard]] Camera&            camera()       { return m_camera; }
     [[nodiscard]] Resources&         resources()    { return m_resources; }
     [[nodiscard]] MetricStore&       store()        { return m_store; }
+    [[nodiscard]] ControlStore&      controls()     { return m_controls; }
     [[nodiscard]] Clock const&       clock() const  { return m_clock; }
     /// UI thread, while running; nullptr otherwise.
     [[nodiscard]] sf::RenderWindow*  window()       { return m_window.get(); }
@@ -111,6 +113,7 @@ private:
     Camera      m_camera;
     Resources   m_resources;
     MetricStore m_store;
+    ControlStore m_controls;
     Clock       m_clock;
 
     std::unique_ptr<sf::RenderWindow> m_window;
