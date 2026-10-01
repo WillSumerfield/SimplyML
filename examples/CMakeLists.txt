@@ -13,3 +13,11 @@ simplyml_warnings(dashboard)
 add_executable(controls cpp/controls/main.cpp)
 target_link_libraries(controls PRIVATE SimplyML::SimplyML)
 simplyml_warnings(controls)
+
+add_executable(network_view cpp/network_view/main.cpp)
+target_link_libraries(network_view PRIVATE SimplyML::SimplyML)
+simplyml_warnings(network_view)
+
+add_executable(cart_pendulum cpp/cart_pendulum/main.cpp)
+target_link_libraries(cart_pendulum PRIVATE SimplyML::SimplyML)
+simplyml_warnings(cart_pendulum)
