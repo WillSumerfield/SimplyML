@@ -21,3 +21,13 @@ simplyml_warnings(network_view)
 add_executable(cart_pendulum cpp/cart_pendulum/main.cpp)
 target_link_libraries(cart_pendulum PRIVATE SimplyML::SimplyML)
 simplyml_warnings(cart_pendulum)
+
+# The original Pendulum-NEAT app (NEAT + pbd physics), ported onto SimplyML. Its own code keeps the
+# original style, so the library's warning flags aren't applied.
+add_executable(pendulum_neat
+    pendulum_neat/main.cpp
+    pendulum_neat/dashboard.cpp
+    pendulum_neat/training/trainer.cpp)
+target_include_directories(pendulum_neat PRIVATE pendulum_neat)
+target_compile_definitions(pendulum_neat PRIVATE PENDULUM_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/pendulum_neat/res")
+target_link_libraries(pendulum_neat PRIVATE SimplyML::SimplyML)
