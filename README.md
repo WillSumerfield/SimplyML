@@ -12,7 +12,7 @@ cmake --build build -j
 ctest --test-dir build       # unit tests + install/find_package round-trip
 ```
 
-Linux needs the SFML system dependencies: X11 (`libx11-dev libxrandr-dev libxcursor-dev libxi-dev`), OpenGL and `libudev-dev`. Freetype and HarfBuzz are bundled.
+Linux source builds need the SFML system dependencies: `sudo apt install libx11-dev libxrandr-dev libxcursor-dev libxi-dev libgl1-mesa-dev libudev-dev` (Fedora: `libX11-devel libXrandr-devel libXcursor-devel libXi-devel mesa-libGL-devel systemd-devel`). Windows needs only MSVC. Freetype and HarfBuzz are bundled.
 
 ## Use from CMake
 
@@ -49,9 +49,24 @@ app.join();
 
 ## Python
 
+Prebuilt wheels (no compiler or system packages needed) are attached to each [GitHub Release](https://github.com/WillSumerfield/SimplyML/releases). Install the one for your platform and Python:
+
+```sh
+uv pip install https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp312-abi3-manylinux_2_28_x86_64.whl
+```
+
+| Platform | Python 3.10 | Python 3.11 | Python 3.12+ |
+|---|---|---|---|
+| Linux x86_64 | [cp310](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp310-cp310-manylinux_2_28_x86_64.whl) | [cp311](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp311-cp311-manylinux_2_28_x86_64.whl) | [abi3](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp312-abi3-manylinux_2_28_x86_64.whl) |
+| Windows x64 | [cp310](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp310-cp310-win_amd64.whl) | [cp311](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp311-cp311-win_amd64.whl) | [abi3](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp312-abi3-win_amd64.whl) |
+
+For the torch extra: `uv pip install "simplyml[torch] @ <wheel url>"`. Linux wheels use the host's X11 and OpenGL.
+
+From source (needs the system dependencies under Build):
+
 ```sh
 uv venv --python 3.12 && uv pip install -e ".[test]"   # builds the C++ core (first build takes ~1 min)
-uv run pytest                                          # X display needed for the window test
+uv run pytest                                          # X display needed for the window tests
 ```
 
 ```python
@@ -76,7 +91,11 @@ with app:                                        # UI runs on its own thread
 
 ML widgets: `net = grid.network_view("Network")` then `net.set_graph(simplyml.mlp_graph(model, x=sample))` (a torch module, or a list of weight matrices with `activations=`); `grid.cart_pendulum(...)` with `set_state(base, joints, push)`; `grid.training_stats()` with `app.store.push_stats(iteration, best_score=..., ...)`. Torch is optional (`.[torch]`).
 
-Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py`, `controls.py` and `network_view.py`.
+Python 3.10+ on Linux or Windows. From source, re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py`, `controls.py` and `network_view.py`.
+
+## Releasing
+
+Bump `version` in `pyproject.toml` (and the wheel links above), commit and push, then run the **release** workflow from the Actions tab. It builds and tests the wheels and sdist, and creates Release `v<version>` with them; it refuses a version whose tag already exists.
 
 ## Credits
 
