@@ -39,7 +39,8 @@ def _find_window(display, title, timeout=5.0):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         for w in display.screen().root.query_tree().children:
-            if w.get_wm_name() == title:
+            # viewable: focusing an unmapped window is a BadMatch and the keys go elsewhere
+            if w.get_wm_name() == title and w.get_attributes().map_state == 2:  # X.IsViewable
                 return w
         time.sleep(0.05)
     raise TimeoutError(f"window {title!r} never appeared")

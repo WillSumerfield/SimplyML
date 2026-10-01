@@ -86,7 +86,8 @@ def _find_window(display, title, timeout=5.0):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         for w in display.screen().root.query_tree().children:
-            if w.get_wm_name() == title:
+            # viewable: focusing an unmapped window is a BadMatch and the keys go elsewhere
+            if w.get_wm_name() == title and w.get_attributes().map_state == 2:  # X.IsViewable
                 return w
         time.sleep(0.05)
     raise TimeoutError(f"window {title!r} never appeared")
@@ -118,6 +119,8 @@ def test_live_controls_keys_clicks_callbacks():
     with app:
         w = _find_window(d, title)
         pos = w.translate_coords(d.screen().root, 0, 0)
+        geo = w.get_geometry()
+        xtest.fake_input(d, X.MotionNotify, x=-pos.x + geo.width // 2, y=-pos.y + geo.height // 2)
         w.set_input_focus(X.RevertToParent, X.CurrentTime)
         d.sync()
 
