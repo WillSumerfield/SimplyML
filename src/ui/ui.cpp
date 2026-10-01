@@ -17,6 +17,7 @@ Ui::Ui(App& app, Theme theme)
         frame(canvas.target(), m_app.clock().now(), m_app.clock().dt(), m_app.mouseScreen());
     });
     m_eventId = app.events().subscribe([this](sf::Event const& e) {
+        std::lock_guard lock{m_mutex};
         return m_root->handle(e, context(m_app.clock().now(), m_app.clock().dt(), m_app.mouseScreen()));
     });
 }
@@ -43,6 +44,7 @@ UiContext Ui::context(double now, float dt, sf::Vector2f mouse) const
 
 void Ui::frame(sf::RenderTarget& target, double now, float dt, sf::Vector2f mouse)
 {
+    std::lock_guard    lock{m_mutex};
     UiContext const    ctx    = context(now, dt, mouse);
     float const        margin = m_theme.px(m_theme.margin);
     sf::Vector2f const size{target.getSize()};

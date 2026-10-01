@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string_view>
 
@@ -16,8 +17,9 @@ namespace sml
 /// The widget tree of one App: lays it out to the window (on resize and every frame), updates
 /// and draws it in screen space, and feeds it input at priority 0 (above the camera controls).
 ///
-/// Build the tree before `App::start`, or from the UI thread (`App::post`). Destroy the Ui only
-/// while the App's loop isn't running.
+/// Build the tree before `App::start`, from the UI thread (`App::post`), or from any thread while
+/// holding `mutex()` (the UI thread holds it while laying out, drawing and dispatching input).
+/// Destroy the Ui only while the App's loop isn't running.
 class Ui
 {
 public:
@@ -50,6 +52,9 @@ public:
         return *w;
     }
 
+    /// Held by the UI thread for each frame and input event.
+    [[nodiscard]] std::recursive_mutex& mutex() { return m_mutex; }
+
     [[nodiscard]] Theme&       theme()       { return m_theme; }
     [[nodiscard]] Theme const& theme() const { return m_theme; }
 
@@ -61,6 +66,7 @@ private:
     [[nodiscard]] UiContext context(double now, float dt, sf::Vector2f mouse) const;
 
     App&                    m_app;
+    std::recursive_mutex    m_mutex;
     Theme                   m_theme;
     std::unique_ptr<Widget> m_root;
     std::uint64_t           m_drawId = 0;
