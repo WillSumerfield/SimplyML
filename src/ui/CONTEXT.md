@@ -14,6 +14,11 @@ Sits on `core`. Widgets draw from a Theme and bound data, never from training co
 - **layout**: rows, columns and grids.
 - **panel**: the dashboard card that most widgets are drawn in.
 - **ui**: the widget tree attached to one App.
+- **axes**: tick spacing, data-to-pixel mapping and grid/labels shared by charts.
+- **value_format**: how numbers are shown.
+- **line_chart, bar_chart, phase_plot**: charts of metric series.
+- **stats**: value readouts, gauges, status dots and the cards and tiles holding them.
+- **ruler, tracer**: scale and trail drawables for world-space scenes.
 
 ## Language
 
@@ -60,3 +65,46 @@ The pointer being over a widget / held down on it / the last interactive widget 
 
 **Interactive Widget**:
 A widget that claims presses (buttons, sliders); others let input pass through.
+
+**Binding**:
+A widget naming the Metric Store series it shows; it reads the latest data itself each frame.
+_Avoid_: Subscription, feed
+
+**Chart**:
+A panel plotting series against their steps (line, bar) or against each other (phase plot).
+_Avoid_: Graph, plot (except Phase Plot)
+
+**Window**:
+How many of the newest points a chart shows; all of them by default.
+_Avoid_: History, buffer
+
+**Readout**:
+A panel's latest value, shown at the top-right of its title row.
+
+**Legend**:
+Colored series names in a chart's title row, shown when it has several series.
+
+**Value Format**:
+How a number is turned into text: decimals, zero padding, percent or duration.
+
+**Gauge**:
+A labelled bar showing where a value sits in a fixed range.
+_Avoid_: Progress bar, meter
+
+**Status Dot**:
+A colored dot and text showing whether something is on or off.
+
+**Stat Card**:
+A panel stacking value readouts, gauges and status dots.
+
+**Stat Tile**:
+A small untitled panel with one label and one large value.
+
+**Phase Plot**:
+A trajectory of one series against another, newest points drawn thickest.
+
+**Tracer**:
+A fading trail behind a moving point in a scene.
+
+**Ruler**:
+A labelled scale of major and minor ticks, usually under a scene.

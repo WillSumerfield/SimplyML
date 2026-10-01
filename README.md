@@ -2,7 +2,7 @@
 
 A small C++17 library for live ML-training dashboards, built on SFML 3, with Python bindings. Training code pushes metrics; SimplyML renders them in dark, rounded, themed widgets.
 
-> Early development. Currently provides the `util` and `core` layers (app shell, events, camera, metric store); widgets come next.
+> Early development. Provides the app shell, metric store, layout and display widgets (charts, stat cards, gauges); interactive controls and ML widgets come next.
 
 ## Build
 
@@ -21,24 +21,29 @@ find_package(SimplyML REQUIRED)            # after `cmake --install build --pref
 target_link_libraries(app PRIVATE SimplyML::SimplyML)
 ```
 
-Each layer is also its own target, so you can link just what you need: `SimplyML::util` (header-only, no SFML) or `SimplyML::core`.
+Each layer is also its own target, so you can link just what you need: `SimplyML::util` (header-only, no SFML), `SimplyML::core` or `SimplyML::ui`.
 
 ## Quick look
 
 ```cpp
-#include <simplyml/core/app.hpp>
+#include <simplyml/ui/line_chart.hpp>
+#include <simplyml/ui/stats.hpp>
+#include <simplyml/ui/ui.hpp>
 
-sml::App app;                       // windowed 1600x900 by default
-app.onDraw([&](sml::Canvas& c) { /* read app.store().series("loss"), draw */ });
-app.start();                        // UI on a background thread
+sml::App app;                                   // windowed 1600x900 by default
+sml::Ui  ui{app};
+auto& grid = ui.setRoot<sml::Grid>(2);
+grid.add<sml::LineChart>("Loss", "loss");       // widgets bind to store series by name
+grid.add<sml::StatTile>("Epoch", "epoch", sml::ValueFormat::integer(4));
+app.start();                                    // UI on a background thread
 
 for (int step = 0; app.isRunning(); ++step) {
-    app.store().push("loss", step, train());   // safe from any thread
+    app.store().push("loss", step, train());    // safe from any thread
 }
 app.join();
 ```
 
-`app.run(update)` instead blocks on the calling thread. See `examples/cpp/threaded_training`.
+`app.run(update)` instead blocks on the calling thread. See `examples/cpp/dashboard`, `layout` and `threaded_training`.
 
 ## Python
 
@@ -50,14 +55,19 @@ uv run pytest                                          # X display needed for th
 ```python
 import simplyml
 
-with simplyml.App(title="run 1") as app:        # UI runs on its own thread
+app = simplyml.App(title="run 1")
+grid = app.ui.grid(columns=2)
+grid.line_chart("Loss", series=["train_loss", "val_loss"], span=2)
+grid.stat_tile("Epoch", "epoch", fmt="04d")
+
+with app:                                        # UI runs on its own thread
     for step in range(10_000):
-        app.store.push("loss", train_step())     # cheap; never blocks on rendering
+        app.store.push("train_loss", train_step())  # cheap; never blocks on rendering
         for e in app.poll_events():              # unconsumed keys/mouse, window close
             if e.key == "q": app.close()
 ```
 
-Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/hello_window.py`.
+Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py`.
 
 ## Credits
 

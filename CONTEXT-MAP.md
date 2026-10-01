@@ -13,10 +13,15 @@
  1 ├── examples
  2 │   ├── CMakeLists.txt
  2 │   ├── cpp
+ 3 │   │   ├── dashboard
+ 4 │   │   │   └── main.cpp
+ 3 │   │   ├── layout
+ 4 │   │   │   └── main.cpp
  3 │   │   └── threaded_training
  4 │   │       └── main.cpp
  2 │   └── python
- 3 │       └── hello_window.py
+ 3 │       ├── hello_window.py
+ 3 │       └── train_loop_metrics.py
  1 ├── .gitignore
  1 ├── include
  2 │   └── simplyml
@@ -31,6 +36,24 @@
  4 │       │   ├── metric_store.hpp
  4 │       │   ├── resources.hpp
  4 │       │   └── snapshot.hpp
+ 3 │       ├── ui
+ 4 │       │   ├── align.hpp
+ 4 │       │   ├── axes.hpp
+ 4 │       │   ├── bar_chart.hpp
+ 4 │       │   ├── geometry.hpp
+ 4 │       │   ├── layout.hpp
+ 4 │       │   ├── line_chart.hpp
+ 4 │       │   ├── panel.hpp
+ 4 │       │   ├── phase_plot.hpp
+ 4 │       │   ├── rounded_rect.hpp
+ 4 │       │   ├── ruler.hpp
+ 4 │       │   ├── stats.hpp
+ 4 │       │   ├── text.hpp
+ 4 │       │   ├── theme.hpp
+ 4 │       │   ├── tracer.hpp
+ 4 │       │   ├── ui.hpp
+ 4 │       │   ├── value_format.hpp
+ 4 │       │   └── widget.hpp
  3 │       └── util
  4 │           ├── easing.hpp
  4 │           ├── format.hpp
@@ -67,9 +90,26 @@
  2 │   ├── python
  3 │   │   ├── CMakeLists.txt
  3 │   │   ├── CONTEXT.md
- 3 │   │   └── module.cpp
+ 3 │   │   ├── module.cpp
+ 3 │   │   ├── py_app.hpp
+ 3 │   │   └── ui_bindings.cpp
  2 │   ├── ui
- 3 │   │   └── CONTEXT.md
+ 3 │   │   ├── axes.cpp
+ 3 │   │   ├── bar_chart.cpp
+ 3 │   │   ├── CONTEXT.md
+ 3 │   │   ├── geometry.cpp
+ 3 │   │   ├── layout.cpp
+ 3 │   │   ├── line_chart.cpp
+ 3 │   │   ├── panel.cpp
+ 3 │   │   ├── phase_plot.cpp
+ 3 │   │   ├── rounded_rect.cpp
+ 3 │   │   ├── ruler.cpp
+ 3 │   │   ├── stats.cpp
+ 3 │   │   ├── text.cpp
+ 3 │   │   ├── tracer.cpp
+ 3 │   │   ├── ui.cpp
+ 3 │   │   ├── value_format.cpp
+ 3 │   │   └── widget.cpp
  2 │   └── util
  3 │       └── CONTEXT.md
  1 ├── temp
@@ -91,7 +131,14 @@
  3 │   │   └── main.cpp
  2 │   ├── python
  3 │   │   ├── __pycache__
- 3 │   │   └── test_smoke.py
+ 3 │   │   ├── test_smoke.py
+ 3 │   │   └── test_ui.py
+ 2 │   ├── ui
+ 3 │   │   ├── helpers.hpp
+ 3 │   │   ├── test_geometry.cpp
+ 3 │   │   ├── test_layout.cpp
+ 3 │   │   ├── test_render.cpp
+ 3 │   │   └── test_values.cpp
  2 │   └── util
  3 │       ├── test_easing.cpp
  3 │       ├── test_format.cpp
