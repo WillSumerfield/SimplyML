@@ -13,17 +13,67 @@
  1 ├── examples
  2 │   ├── CMakeLists.txt
  2 │   ├── cpp
+ 3 │   │   ├── cart_pendulum
+ 4 │   │   │   └── main.cpp
  3 │   │   ├── controls
  4 │   │   │   └── main.cpp
  3 │   │   ├── dashboard
  4 │   │   │   └── main.cpp
  3 │   │   ├── layout
  4 │   │   │   └── main.cpp
+ 3 │   │   ├── network_view
+ 4 │   │   │   └── main.cpp
  3 │   │   └── threaded_training
  4 │   │       └── main.cpp
+ 2 │   ├── pendulum_neat
+ 3 │   │   ├── common
+ 4 │   │   │   ├── binary_io.hpp
+ 4 │   │   │   ├── index_vector.hpp
+ 4 │   │   │   ├── math.hpp
+ 4 │   │   │   ├── number_generator.hpp
+ 4 │   │   │   ├── thread_pool.hpp
+ 4 │   │   │   ├── utils.hpp
+ 4 │   │   │   └── vec.hpp
+ 3 │   │   ├── dashboard.cpp
+ 3 │   │   ├── dashboard.hpp
+ 3 │   │   ├── main.cpp
+ 3 │   │   ├── neat
+ 4 │   │   │   ├── activation.hpp
+ 4 │   │   │   ├── common_configuration.hpp
+ 4 │   │   │   ├── dag.hpp
+ 4 │   │   │   ├── genome.hpp
+ 4 │   │   │   ├── mutator.hpp
+ 4 │   │   │   ├── network_generator.hpp
+ 4 │   │   │   └── network.hpp
+ 3 │   │   ├── physic
+ 4 │   │   │   ├── anchor.hpp
+ 4 │   │   │   ├── complex.hpp
+ 4 │   │   │   ├── configuration.hpp
+ 4 │   │   │   ├── constraints
+ 5 │   │   │   │   ├── constraint.hpp
+ 5 │   │   │   │   ├── drag_constraint.hpp
+ 5 │   │   │   │   └── object_pin.hpp
+ 4 │   │   │   ├── matrix.hpp
+ 4 │   │   │   ├── object.hpp
+ 4 │   │   │   ├── solver.hpp
+ 4 │   │   │   └── vertex.hpp
+ 3 │   │   ├── res
+ 4 │   │   │   └── wheel.png
+ 3 │   │   └── training
+ 4 │   │       ├── agent.hpp
+ 4 │   │       ├── agent_info.hpp
+ 4 │   │       ├── config.hpp
+ 4 │   │       ├── disturbances.hpp
+ 4 │   │       ├── evolver.hpp
+ 4 │   │       ├── scene.hpp
+ 4 │   │       ├── selector.hpp
+ 4 │   │       ├── trainer.cpp
+ 4 │   │       ├── trainer.hpp
+ 4 │   │       └── training_state.hpp
  2 │   └── python
  3 │       ├── controls.py
  3 │       ├── hello_window.py
+ 3 │       ├── network_view.py
  3 │       └── train_loop_metrics.py
  1 ├── .gitignore
  1 ├── include
@@ -40,6 +90,11 @@
  4 │       │   ├── metric_store.hpp
  4 │       │   ├── resources.hpp
  4 │       │   └── snapshot.hpp
+ 3 │       ├── ml
+ 4 │       │   ├── cart_pendulum_view.hpp
+ 4 │       │   ├── formats.hpp
+ 4 │       │   ├── network_view.hpp
+ 4 │       │   └── training_stats_card.hpp
  3 │       ├── ui
  4 │       │   ├── align.hpp
  4 │       │   ├── axes.hpp
@@ -75,6 +130,7 @@
  1 ├── python
  2 │   └── simplyml
  3 │       ├── __init__.py
+ 3 │       ├── ml.py
  3 │       ├── __pycache__
  3 │       └── py.typed
  1 ├── README.md
@@ -93,11 +149,16 @@
  3 │   │   ├── metric_store.cpp
  3 │   │   └── resources.cpp
  2 │   ├── ml
- 3 │   │   └── CONTEXT.md
+ 3 │   │   ├── cart_pendulum_view.cpp
+ 3 │   │   ├── CONTEXT.md
+ 3 │   │   ├── formats.cpp
+ 3 │   │   ├── network_view.cpp
+ 3 │   │   └── training_stats_card.cpp
  2 │   ├── python
  3 │   │   ├── CMakeLists.txt
  3 │   │   ├── CONTEXT.md
  3 │   │   ├── control_bindings.cpp
+ 3 │   │   ├── ml_bindings.cpp
  3 │   │   ├── module.cpp
  3 │   │   ├── py_app.hpp
  3 │   │   ├── ui_bindings.cpp
@@ -138,12 +199,15 @@
  3 │   │   ├── test_resources.cpp
  3 │   │   └── test_snapshot.cpp
  2 │   ├── main.cpp
+ 2 │   ├── ml
+ 3 │   │   └── test_ml.cpp
  2 │   ├── package
  3 │   │   ├── CMakeLists.txt
  3 │   │   └── main.cpp
  2 │   ├── python
  3 │   │   ├── __pycache__
  3 │   │   ├── test_controls.py
+ 3 │   │   ├── test_ml.py
  3 │   │   ├── test_smoke.py
  3 │   │   └── test_ui.py
  2 │   ├── ui
@@ -178,3 +242,4 @@ Glossaries live under `src/<layer>/`; public headers for each layer are in `incl
 - **Core → UI**: widgets draw with resources and time handed down from the App, never looked up globally; controls write the App's Control Store, which training code reads.
 - **Python → all layers**: binds the C++ API with Python naming; Python reaches the UI only through the Metric Store, Snapshots, the Control Store and polled App Events.
 - **ML → UI**: domain widgets are built from UI primitives and consume plain format structs, not training-framework types.
+- **examples/pendulum_neat → all layers**: the original Pendulum-NEAT app (NEAT, pbd physics, training) rebuilt on the library; its trainer reaches the UI only through the stores and the ML widgets' format setters.

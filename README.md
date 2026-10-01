@@ -45,6 +45,8 @@ app.join();
 
 `app.run(update)` instead blocks on the calling thread. Controls (`Button`, `Toggle`, `Slider`, `Select`, `NumberField`, in a `ControlPanel`) publish to `app.controls()`, which training code reads from any thread; `ui.bindKey` adds hotkeys, listed by a `KeyBindings` panel. ML widgets take plain structs through thread-safe setters: `NetworkView::setGraph(LayeredGraph)`, `CartPendulumView::setState(LinkChainState)` (plus faded ghosts), and `TrainingStatsCard` reads what `pushStats(store, TrainingStats)` pushes. See `examples/cpp/dashboard`, `controls`, `layout`, `threaded_training`, `network_view` and `cart_pendulum`.
 
+`examples/pendulum_neat` is the original Pendulum-NEAT app (NEAT evolving double-pendulum balancers) rebuilt on SimplyML: `build/examples/pendulum_neat [--size 2560x1440] [--fullscreen]`; D switches to the demo, H hides the controls.
+
 ## Python
 
 ```sh
