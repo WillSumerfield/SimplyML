@@ -22,6 +22,8 @@ public:
     BarChart& setSeries(std::string name) { m_series = std::move(name); m_seen = UINT64_MAX; return *this; }
     /// Newest `bars` values (default 50).
     BarChart& setWindow(std::size_t bars);
+    /// Bars share the full width (they thin out as data arrives) instead of keeping window-sized slots.
+    BarChart& setFill(bool fill) { m_fill = fill; m_dirty = true; return *this; }
     BarChart& setYRange(double lo, double hi);
     BarChart& setAutoY();
     BarChart& setYFormat(ValueFormat fmt)     { m_yFormat = std::move(fmt); m_yFormatSet = true; return *this; }
@@ -41,6 +43,7 @@ private:
     std::size_t   m_window = 50;
     std::uint64_t m_seen   = UINT64_MAX;
     bool          m_autoY  = true;
+    bool          m_fill   = false;
     double        m_fixedLo = 0.0, m_fixedHi = 1.0;
     ValueFormat   m_yFormat;
     bool          m_yFormatSet = false;

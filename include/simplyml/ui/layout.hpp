@@ -38,6 +38,10 @@ public:
     Stack& setGap(float gap)         { m_gap = gap; invalidate(); return *this; }
     Stack& setAlign(Align align)     { m_align = align; invalidate(); return *this; }
 
+    /// Visible children end to end (fixed px or natural size) plus gaps and padding along the axis;
+    /// the largest natural size across it.
+    [[nodiscard]] sf::Vector2f naturalSize(UiContext const& ctx) const override;
+
 protected:
     void arrange(UiContext const& ctx) override;
 

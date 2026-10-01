@@ -33,6 +33,28 @@ std::vector<Span1D> distribute(std::vector<Length> const& lengths, float total, 
     return out;
 }
 
+sf::Vector2f Stack::naturalSize(UiContext const& ctx) const
+{
+    float const pad = m_padding < 0.0f ? ctx.theme.px(ctx.theme.margin) : m_padding;
+    float const gap = m_gap < 0.0f ? ctx.theme.px(ctx.theme.gap) : m_gap;
+    bool const  horizontal = m_axis == Axis::Horizontal;
+    float main = 0.0f, cross = 0.0f;
+    int   shown = 0;
+    for (auto const& c : m_children) {
+        if (!c->visible()) {
+            continue;
+        }
+        sf::Vector2f const n = c->naturalSize(ctx);
+        float const        px = c->extent().px;
+        main += px > 0.0f ? px : (horizontal ? n.x : n.y);
+        cross = std::max(cross, horizontal ? n.y : n.x);
+        ++shown;
+    }
+    main += gap * static_cast<float>(std::max(shown - 1, 0)) + 2.0f * pad;
+    cross += 2.0f * pad;
+    return horizontal ? sf::Vector2f{main, cross} : sf::Vector2f{cross, main};
+}
+
 void Stack::arrange(UiContext const& ctx)
 {
     float const pad = m_padding < 0.0f ? ctx.theme.px(ctx.theme.margin) : m_padding;

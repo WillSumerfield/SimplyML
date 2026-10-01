@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 
 #include "helpers.hpp"
+#include "simplyml/ui/stats.hpp"
 #include "simplyml/ui/layout.hpp"
 
 using sml::fr;
@@ -150,4 +151,19 @@ TEST_CASE("Widget: hover, click and focus; only interactive widgets consume")
     CHECK_FALSE(row.handle(press(150), t.ctx()));
     CHECK_FALSE(a.focused());
     CHECK_FALSE(b.focused());
+}
+
+TEST_CASE("Stack natural size: fixed px or natural along the axis, gaps, padding; max across")
+{
+    TestUi     t;
+    sml::Column col;
+    col.setGap(10).setPadding(5);
+    auto& tile = col.add<sml::StatTile>("Epoch", "epoch");
+    tile.setExtent(sml::fit());
+    col.add<Probe>().setExtent(sml::px(40));
+    col.add<Probe>().setVisible(false);
+    float const tileH = tile.naturalSize(t.ctx()).y;
+    auto const  n     = col.naturalSize(t.ctx());
+    CHECK(n.y == doctest::Approx(tileH + 40 + 10 + 2 * 5));
+    CHECK(n.x == doctest::Approx(tile.naturalSize(t.ctx()).x + 2 * 5));
 }

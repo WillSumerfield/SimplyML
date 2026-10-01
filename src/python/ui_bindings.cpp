@@ -206,16 +206,17 @@ void bindUi(nb::module_& m)
             "Line chart of one series (str) or several (list; legend shown). `window` = newest N points (0 = all).")
         .def("bar_chart", [](ContainerRef const& r, std::string title, std::string series, nb::handle color,
                              std::size_t window, std::optional<std::pair<double, double>> yRange, std::string fmt,
-                             nb::kwargs kw) {
+                             bool fill, nb::kwargs kw) {
             auto const valueFmt = toFormat(fmt);
             auto o = addTo<sml::BarChart>(r, kw, std::move(title), std::move(series), toColor(color, themeOf(r)));
             UiLock l{*r.app};
             auto& c = as<sml::BarChart>(nb::cast<WidgetRef const&>(o), "bar chart");
-            c.setWindow(window).setValueFormat(valueFmt);
+            c.setWindow(window).setValueFormat(valueFmt).setFill(fill);
             if (yRange) c.setYRange(yRange->first, yRange->second);
             return o;
         }, "title"_a = "", "series"_a = "", "color"_a = nb::none(), "window"_a = 50, "y_range"_a = nb::none(),
-            "fmt"_a = ".4", "kw"_a, "Bars for the newest `window` values of a series.")
+            "fmt"_a = ".4", "fill"_a = false, "kw"_a,
+            "Bars for the newest `window` values of a series; `fill` stretches them over the width.")
         .def("phase_plot", [](ContainerRef const& r, std::string title, std::string x, std::string y, nb::handle color,
                               std::size_t maxPoints, std::optional<std::tuple<double, double, double, double>> ranges,
                               nb::kwargs kw) {

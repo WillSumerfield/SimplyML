@@ -105,8 +105,8 @@ void BarChart::rebuild(UiContext const& ctx)
     sf::Color const   color = accent();
     std::size_t const n     = s->size();
     std::size_t const first = n > m_window ? n - m_window : 0;
-    // Bar slots are sized for the full window, so bars keep their width as data arrives.
-    float const slot  = m_map.rect.size.x / static_cast<float>(m_window);
+    // Bar slots are sized for the full window, so bars keep their width as data arrives (unless filling).
+    float const slot  = m_map.rect.size.x / static_cast<float>(m_fill ? n - first : m_window);
     float const space = std::min(t.px(2.0f), 0.25f * slot);
     float const zeroY = std::clamp(m_map.y(0.0), m_map.rect.position.y, m_map.rect.position.y + m_map.rect.size.y);
     float const cap   = t.px(4.0f);
