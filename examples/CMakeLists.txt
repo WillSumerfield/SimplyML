@@ -5,3 +5,7 @@ simplyml_warnings(threaded_training)
 add_executable(layout cpp/layout/main.cpp)
 target_link_libraries(layout PRIVATE SimplyML::SimplyML)
 simplyml_warnings(layout)
+
+add_executable(dashboard cpp/dashboard/main.cpp)
+target_link_libraries(dashboard PRIVATE SimplyML::SimplyML)
+simplyml_warnings(dashboard)
