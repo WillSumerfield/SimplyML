@@ -18,6 +18,10 @@ struct RulerStyle
     float       textScale  = 1.0f; // e.g. 0.4 to draw large, crisp glyphs scaled down
     float       labelGap   = 6.0f;
     sf::Color   color      = sf::Color::White;
+    sf::Color   majorColor = sf::Color::Transparent; // transparent = `color`
+    bool        centered   = false; // ticks centered on the axis instead of hanging below it
+    bool        baseline   = true;  // horizontal axis line
+    float       zeroScale  = 1.0f;  // extra scale for the label at 0
     std::function<std::string(double)> label; // default: the value with no decimals
 };
 

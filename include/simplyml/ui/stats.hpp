@@ -133,6 +133,9 @@ public:
 
     [[nodiscard]] Column& rows() { return *m_rows; }
 
+    /// Height of the visible rows plus chrome, for `fit()`.
+    [[nodiscard]] sf::Vector2f naturalSize(UiContext const& ctx) const override;
+
 protected:
     void onLayout(UiContext const& ctx) override;
 

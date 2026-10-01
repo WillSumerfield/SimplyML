@@ -42,14 +42,18 @@ void Ruler::draw(sf::RenderTarget& target, sf::RenderStates states) const
     sf::VertexArray va{sf::PrimitiveType::Triangles};
     int const       n = tickCount();
     // Major ticks fall on multiples of step * majorEvery, not on the first tick.
-    long const firstIndex = std::lround(m_from / m_step);
+    long const      firstIndex = std::lround(m_from / m_step);
+    sf::Color const majorColor = m_style.majorColor.a ? m_style.majorColor : m_style.color;
     for (int i = 0; i < n; ++i) {
         float const x     = m_from + static_cast<float>(i) * m_step;
         bool const  major = (firstIndex + i) % m_major == 0;
         float const h     = major ? 2.0f * m_style.tickHeight : m_style.tickHeight;
-        geo::line(va, {x, 0.0f}, {x, h}, m_style.lineWidth, m_style.color);
+        float const top   = m_style.centered ? -0.5f * h : 0.0f;
+        geo::line(va, {x, top}, {x, top + h}, m_style.lineWidth, major ? majorColor : m_style.color);
     }
-    geo::line(va, {m_from, 0.0f}, {m_to, 0.0f}, m_style.lineWidth, m_style.color);
+    if (m_style.baseline) {
+        geo::line(va, {m_from, 0.0f}, {m_to, 0.0f}, m_style.lineWidth, m_style.color);
+    }
     target.draw(va, states);
 
     if (!m_font) {
@@ -62,7 +66,9 @@ void Ruler::draw(sf::RenderTarget& target, sf::RenderStates states) const
         float const       x     = m_from + static_cast<float>(i) * m_step;
         std::string const label = m_style.label ? m_style.label(x) : toString(x, 0);
         sf::RenderStates  s     = states;
-        s.transform.translate({x, 2.0f * m_style.tickHeight + m_style.labelGap}).scale({m_style.textScale, m_style.textScale});
+        float const       below = m_style.centered ? m_style.tickHeight : 2.0f * m_style.tickHeight;
+        float const       scale = m_style.textScale * (std::abs(x) < 0.5f * m_step ? m_style.zeroScale : 1.0f);
+        s.transform.translate({x, below + m_style.labelGap}).scale({scale, scale});
         drawText(target, *m_font, label, m_style.textSize, {0.0f, 0.0f}, m_style.color, Align::Center, Align::Start, s);
     }
 }

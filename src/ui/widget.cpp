@@ -104,6 +104,20 @@ bool Container::remove(Widget const& child)
     return true;
 }
 
+bool Container::move(Widget const& child, std::size_t index)
+{
+    auto it = std::find_if(m_children.begin(), m_children.end(), [&](auto const& c) { return c.get() == &child; });
+    if (it == m_children.end()) {
+        return false;
+    }
+    auto w = std::move(*it);
+    m_children.erase(it);
+    index = std::min(index, m_children.size());
+    m_children.insert(m_children.begin() + static_cast<std::ptrdiff_t>(index), std::move(w));
+    invalidate();
+    return true;
+}
+
 void Container::clear()
 {
     m_children.clear();

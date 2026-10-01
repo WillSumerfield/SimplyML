@@ -205,6 +205,19 @@ void StatCard::onLayout(UiContext const& ctx)
     Panel::onLayout(ctx);
 }
 
+sf::Vector2f StatCard::naturalSize(UiContext const& ctx) const
+{
+    float h     = 0.0f;
+    int   shown = 0;
+    for (auto const& c : m_rows->children()) {
+        if (c->visible()) {
+            h += c->naturalSize(ctx).y;
+            ++shown;
+        }
+    }
+    return {0.0f, chromeHeight(ctx) + h + ctx.theme.px(16.0f) * static_cast<float>(std::max(shown - 1, 0))};
+}
+
 StatValue& StatCard::addValue(std::string label, std::string series, ValueFormat fmt)
 {
     return addRow<StatValue>(std::move(label), std::move(series), std::move(fmt), StatValue::Style::Stacked);

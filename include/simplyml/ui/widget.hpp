@@ -137,6 +137,8 @@ public:
     Widget& add(std::unique_ptr<Widget> w);
     /// Removes and destroys `child`; false if it isn't a direct child.
     bool remove(Widget const& child);
+    /// Moves `child` to position `index` (clamped) among the children; false if it isn't a direct child.
+    bool move(Widget const& child, std::size_t index);
     void clear();
 
     [[nodiscard]] std::vector<std::unique_ptr<Widget>> const& children() const { return m_children; }
