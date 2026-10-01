@@ -2,7 +2,7 @@
 
 A small C++17 library for live ML-training dashboards, built on SFML 3, with Python bindings planned. Training code pushes metrics; SimplyML renders them in dark, rounded, themed widgets.
 
-> Early development. Currently provides the `util` layer and the build/packaging skeleton.
+> Early development. Currently provides the `util` and `core` layers (app shell, events, camera, metric store); widgets come next.
 
 ## Build
 
@@ -22,6 +22,23 @@ target_link_libraries(app PRIVATE SimplyML::SimplyML)
 ```
 
 Each layer is also its own target, so you can link just what you need: `SimplyML::util` (header-only, no SFML) or `SimplyML::core`.
+
+## Quick look
+
+```cpp
+#include <simplyml/core/app.hpp>
+
+sml::App app;                       // windowed 1600x900 by default
+app.onDraw([&](sml::Canvas& c) { /* read app.store().series("loss"), draw */ });
+app.start();                        // UI on a background thread
+
+for (int step = 0; app.isRunning(); ++step) {
+    app.store().push("loss", step, train());   // safe from any thread
+}
+app.join();
+```
+
+`app.run(update)` instead blocks on the calling thread. See `examples/cpp/threaded_training`.
 
 ## Credits
 

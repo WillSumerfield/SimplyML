@@ -10,11 +10,24 @@
  2 │   └── SimplyMLConfig.cmake.in
  1 ├── CMakeLists.txt
  1 ├── CONTEXT-MAP.md
+ 1 ├── examples
+ 2 │   ├── CMakeLists.txt
+ 2 │   └── cpp
+ 3 │       └── threaded_training
+ 4 │           └── main.cpp
  1 ├── .gitignore
  1 ├── include
  2 │   └── simplyml
  3 │       ├── core
- 4 │       │   └── default_font.hpp
+ 4 │       │   ├── app.hpp
+ 4 │       │   ├── camera.hpp
+ 4 │       │   ├── canvas.hpp
+ 4 │       │   ├── clock.hpp
+ 4 │       │   ├── default_font.hpp
+ 4 │       │   ├── event_bus.hpp
+ 4 │       │   ├── metric_store.hpp
+ 4 │       │   ├── resources.hpp
+ 4 │       │   └── snapshot.hpp
  3 │       └── util
  4 │           ├── easing.hpp
  4 │           ├── format.hpp
@@ -29,7 +42,12 @@
  3 │       └── ShareTechMono-Regular.ttf
  1 ├── src
  2 │   ├── core
- 3 │   │   └── CONTEXT.md
+ 3 │   │   ├── app.cpp
+ 3 │   │   ├── camera.cpp
+ 3 │   │   ├── CONTEXT.md
+ 3 │   │   ├── event_bus.cpp
+ 3 │   │   ├── metric_store.cpp
+ 3 │   │   └── resources.cpp
  2 │   ├── ml
  3 │   │   └── CONTEXT.md
  2 │   ├── ui
@@ -40,7 +58,14 @@
  1 └── tests
  2     ├── CMakeLists.txt
  2     ├── core
- 3     │   └── test_default_font.cpp
+ 3     │   ├── test_app.cpp
+ 3     │   ├── test_camera.cpp
+ 3     │   ├── test_clock.cpp
+ 3     │   ├── test_default_font.cpp
+ 3     │   ├── test_event_bus.cpp
+ 3     │   ├── test_metric_store.cpp
+ 3     │   ├── test_resources.cpp
+ 3     │   └── test_snapshot.cpp
  2     ├── main.cpp
  2     ├── package
  3     │   ├── CMakeLists.txt
