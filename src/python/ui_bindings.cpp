@@ -10,117 +10,13 @@
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
 
-#include "py_app.hpp"
+#include "widget_refs.hpp"
 #include "simplyml/ui/bar_chart.hpp"
 #include "simplyml/ui/line_chart.hpp"
 #include "simplyml/ui/phase_plot.hpp"
 #include "simplyml/ui/stats.hpp"
 
 using namespace nb::literals;
-
-namespace
-{
-
-// Handles: a widget in an App's tree. They keep the App alive; the widget lives as long as its
-// parent keeps it (`clear()` invalidates handles to removed widgets).
-struct WidgetRef
-{
-    nb::object   owner; // the Python App
-    PyApp*       app;
-    sml::Widget* w;
-};
-struct ContainerRef : WidgetRef {};
-struct StatCardRef : WidgetRef {};
-struct ValueRef : WidgetRef {};
-
-nb::object wrap(WidgetRef const& base, sml::Widget* w)
-{
-    WidgetRef r{base.owner, base.app, w};
-    if (dynamic_cast<sml::Container*>(w)) {
-        return nb::cast(ContainerRef{r});
-    }
-    if (dynamic_cast<sml::StatCard*>(w)) {
-        return nb::cast(StatCardRef{r});
-    }
-    if (dynamic_cast<sml::ValueWidget*>(w)) {
-        return nb::cast(ValueRef{r});
-    }
-    return nb::cast(r);
-}
-
-template<typename T>
-T& as(WidgetRef const& r, char const* what)
-{
-    auto* p = dynamic_cast<T*>(r.w);
-    if (!p) {
-        throw nb::type_error((std::string("widget '") + r.w->id() + "' is not a " + what).c_str());
-    }
-    return *p;
-}
-
-/// Layout keywords shared by every widget-creating method.
-void applyLayout(sml::Widget& w, nb::kwargs const& kw)
-{
-    bool const hasSize   = kw.contains("size");
-    bool const hasWeight = kw.contains("weight");
-    if (hasSize || hasWeight) { // size alone = fixed px; weight alone = share; both = px + share
-        w.setExtent({hasSize ? nb::cast<float>(kw["size"]) : 0.0f, hasWeight ? nb::cast<float>(kw["weight"]) : 0.0f});
-    }
-    for (auto [k, v] : kw) {
-        std::string const key = nb::cast<std::string>(k);
-        if (key == "size" || key == "weight") {
-            continue;
-        }
-        if (key == "id") {
-            w.setId(nb::cast<std::string>(v));
-        } else if (key == "fit") {
-            if (nb::cast<bool>(v)) {
-                w.setExtent(sml::fit());
-            }
-        } else if (key == "span") {
-            if (nb::isinstance<nb::int_>(v)) {
-                w.setSpan(nb::cast<int>(v));
-            } else {
-                auto const s = nb::cast<std::pair<int, int>>(v);
-                w.setSpan(s.first, s.second);
-            }
-        } else if (key == "visible") {
-            w.setVisible(nb::cast<bool>(v));
-        } else {
-            throw nb::type_error(("unexpected keyword argument '" + key + "'").c_str());
-        }
-    }
-}
-
-template<typename T, typename... Args>
-nb::object addTo(ContainerRef const& parent, nb::kwargs const& kw, Args&&... args)
-{
-    UiLock lock{*parent.app};
-    auto&  c = as<sml::Container>(parent, "container");
-    T&     w = c.add<T>(std::forward<Args>(args)...);
-    try {
-        applyLayout(w, kw);
-    } catch (...) {
-        c.remove(w);
-        throw;
-    }
-    return wrap(parent, &w);
-}
-
-std::vector<std::string> seriesList(nb::handle h)
-{
-    if (h.is_none()) {
-        return {};
-    }
-    if (nb::isinstance<nb::str>(h)) {
-        return {nb::cast<std::string>(h)};
-    }
-    return nb::cast<std::vector<std::string>>(h);
-}
-
-sml::Theme const& themeOf(WidgetRef const& r) { return r.app->ui.theme(); }
-
-} // namespace
 
 sf::Color toColor(nb::handle h, sml::Theme const& theme)
 {
@@ -149,35 +45,45 @@ sf::Color toColor(nb::handle h, sml::Theme const& theme)
 }
 
 sml::ValueFormat toFormat(std::string const& spec)
-try {
+{
+    auto bad = [&] {
+        return nb::value_error(("bad format '" + spec + "' (e.g. '.3', '04d', '.1%', '.2e', '.4g', 'duration')").c_str());
+    };
     if (spec == "duration") {
         return sml::ValueFormat::duration();
     }
-    auto bad = [&] { return nb::value_error(("bad format '" + spec + "' (e.g. '.3', '04d', '.1%', 'duration')").c_str()); };
-    if (!spec.empty() && spec.back() == '%') {
-        std::string const body = spec.substr(0, spec.size() - 1);
+    if (spec.empty()) {
+        throw bad();
+    }
+    auto digits = [&](std::string const& s) {
+        if (s.empty() || s.size() > 2 || !std::all_of(s.begin(), s.end(), [](char c) { return c >= '0' && c <= '9'; })) {
+            throw bad();
+        }
+        return std::stoi(s);
+    };
+    char        type = spec.back();
+    std::string body = spec.substr(0, spec.size() - 1);
+    if (type >= '0' && type <= '9') { // ".3" = ".3f"
+        type = 'f';
+        body = spec;
+    }
+    auto precision = [&](int fallback) {
         if (body.empty()) {
-            return sml::ValueFormat::percent(0);
+            return fallback;
         }
         if (body[0] != '.') {
             throw bad();
         }
-        return sml::ValueFormat::percent(std::stoi(body.substr(1)));
+        return digits(body.substr(1));
+    };
+    switch (type) {
+        case 'd': return sml::ValueFormat::integer(body.empty() ? 0 : digits(body));
+        case 'f': if (body.empty()) throw bad(); return sml::ValueFormat::number(precision(2));
+        case '%': return sml::ValueFormat::percent(precision(0));
+        case 'e': return sml::ValueFormat::scientific(precision(1));
+        case 'g': return sml::ValueFormat::general(precision(6));
+        default:  throw bad();
     }
-    if (!spec.empty() && spec.back() == 'd') {
-        std::string const body = spec.substr(0, spec.size() - 1);
-        return sml::ValueFormat::integer(body.empty() ? 0 : std::stoi(body));
-    }
-    std::string body = spec;
-    if (!body.empty() && body.back() == 'f') {
-        body.pop_back();
-    }
-    if (body.size() < 2 || body[0] != '.') {
-        throw bad();
-    }
-    return sml::ValueFormat::number(std::stoi(body.substr(1)));
-} catch (std::logic_error const&) { // stoi
-    throw nb::value_error(("bad format '" + spec + "' (e.g. '.3', '04d', '.1%', 'duration')").c_str());
 }
 
 void bindUi(nb::module_& m)
@@ -235,7 +141,7 @@ void bindUi(nb::module_& m)
         }, "label"_a, "series"_a, "on"_a = "Enabled", "off"_a = "Disabled",
             "Dot + text: on while the series' latest value is > 0.5.");
 
-    nb::class_<ContainerRef, WidgetRef>(m, "Container",
+    auto container = nb::class_<ContainerRef, WidgetRef>(m, "Container",
         "Row, Column or Grid. Its methods add a child and return it; every one takes the layout "
         "keywords id, size (px), weight (share of the rest), fit, span=(columns, rows) and visible.")
         .def("row", [](ContainerRef const& r, std::optional<float> padding, std::optional<float> gap, nb::kwargs kw) {
@@ -344,9 +250,10 @@ void bindUi(nb::module_& m)
             return o;
         }, "label"_a = "", "series"_a = "", "lo"_a = 0.0, "hi"_a = 1.0, "color"_a = nb::none(), "fmt"_a = ".2",
             "kw"_a, "Labelled progress bar.")
-        .def("clear", [](ContainerRef const& r) { UiLock l{*r.app}; as<sml::Container>(r, "container").clear(); },
+        .def("clear", [](ContainerRef const& r) { UiLock l{*r.app}; containerOf(r.w)->clear(); },
             "Removes every child (their handles become invalid).")
-        .def("__len__", [](ContainerRef const& r) { UiLock l{*r.app}; return as<sml::Container>(r, "container").children().size(); });
+        .def("__len__", [](ContainerRef const& r) { UiLock l{*r.app}; return containerOf(r.w)->children().size(); });
+    bindControls(m, container);
 
     // Exposed for App: root container + lookup.
     m.def("_ui_root", [](nb::object owner) {

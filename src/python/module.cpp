@@ -79,7 +79,8 @@ NB_MODULE(_core, m)
         }, "'left', 'right', 'middle', 'extra1' or 'extra2' for mouse events, else None.")
         .def_prop_ro("position", [](sml::AppEvent const& e) { return std::make_tuple(e.position.x, e.position.y); },
             "Mouse position in window pixels (mouse events).")
-        .def_ro("name", &sml::AppEvent::name, "Name of a custom event.")
+        .def_ro("name", &sml::AppEvent::name, "Name of a custom event (a control's name for control edits).")
+        .def_ro("value", &sml::AppEvent::value, "New value, for control edits (button: click count).")
         .def("__repr__", [](sml::AppEvent const& e) {
             std::string s = std::string("Event(") + typeName(e.type);
             if (isKey(e)) {
@@ -158,5 +159,7 @@ NB_MODULE(_core, m)
         }, "name"_a, "Queues a custom event, as widgets will.")
         .def("set_fps_limit", [](PyApp& a, unsigned fps) { a.app.setFpsLimit(fps); }, "fps"_a, "0 = unlimited.")
         .def("set_fullscreen", [](PyApp& a, bool f) { a.app.setFullscreen(f); }, "fullscreen"_a)
-        .def_prop_ro("store", [](PyApp& a) -> sml::MetricStore& { return a.app.store(); }, nb::rv_policy::reference_internal);
+        .def_prop_ro("store", [](PyApp& a) -> sml::MetricStore& { return a.app.store(); }, nb::rv_policy::reference_internal)
+        .def_prop_ro("controls", [](PyApp& a) -> sml::ControlStore& { return a.app.controls(); },
+            nb::rv_policy::reference_internal, "Control values by name, e.g. `app.controls['lr']`.");
 }

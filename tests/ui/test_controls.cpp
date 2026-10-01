@@ -39,11 +39,6 @@ void click(W& w, sml::UiContext const& ctx, sf::Vector2f p)
     w.handle(release(p), ctx);
 }
 
-sf::Vector2f centre(sf::FloatRect r)
-{
-    return r.position + 0.5f * r.size;
-}
-
 } // namespace
 
 TEST_CASE("Slider: linear/log mapping, step, sanitize, readout")

@@ -6,9 +6,12 @@ import numpy as np
 
 from . import _core
 from ._core import App as _App
-from ._core import Container, Event, MetricStore, StatCard, ValueWidget, Widget, key_names
+from ._core import Container, Control, Controls, Event, MetricStore, StatCard, ValueWidget, Widget, key_names
 
-__all__ = ["App", "Container", "Event", "MetricStore", "StatCard", "ValueWidget", "Widget", "key_names"]
+__all__ = [
+    "App", "Container", "Control", "Controls", "Event", "MetricStore", "StatCard", "ValueWidget", "Widget",
+    "key_names",
+]
 
 
 def _push_many(self, name: str, values, steps=None) -> None:
@@ -36,6 +39,16 @@ class App(_App):
                 app.store.push("train_loss", loss)
                 for e in app.poll_events(): ...
 
+    Controls (sliders, toggles, buttons, ...) are read back by name, from any thread:
+
+        panel = app.ui.control_panel("Training")
+        panel.slider("lr", "Learning rate", lo=1e-5, hi=1e-1, value=1e-3, log=True)
+        panel.toggle("pause", "Paused", key="space")
+        ...
+        lr = app.controls["lr"]          # or app["lr"].value
+        for e in app.poll_events():      # edits also arrive as Event(custom, name=..., value=...)
+            ...
+
     The layout may also change while running; widgets are found again with `app["id"]`.
     """
 
@@ -47,6 +60,19 @@ class App(_App):
     def __getitem__(self, id: str) -> Widget:
         """Widget with this `id`."""
         return _core._ui_find(self, id)
+
+    def bind_key(self, key: str, description: str, callback=None) -> None:
+        """Lists `key` in key_bindings panels. With `callback()` (run on the UI thread; keep it
+        quick) the key is handled there; without, it still arrives through `poll_events()`."""
+        _core._bind_key(self, key, description, callback)
+
+    def unbind_key(self, key: str) -> None:
+        _core._unbind_key(self, key)
+
+    @property
+    def key_bindings(self) -> list[tuple[str, str]]:
+        """(key, description) of every binding, in order."""
+        return _core._key_bindings(self)
 
     def wait(self, poll: float = 0.05) -> None:
         """Blocks until the window closes. Unlike `join()`, Ctrl-C still works."""

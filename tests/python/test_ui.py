@@ -56,8 +56,12 @@ def test_bad_arguments_raise_and_leave_no_widget():
         col.line_chart("x", colour="blue")
     with pytest.raises(ValueError):
         col.panel("p", color=(1, 2))
-    with pytest.raises(ValueError):
-        col.bar_chart("x", fmt=".x")
+    for bad in (".x", ".2z", "f", ".1.5", "x%", ".123"):
+        with pytest.raises(ValueError):
+            col.bar_chart("x", fmt=bad)
+    for ok in (".3", ".3f", "d", "04d", "%", ".1%", ".2e", "e", ".4g", "g", "duration"):
+        col.bar_chart("x", fmt=ok)
+    col.clear()
     assert len(col) == 0  # failed calls leave nothing behind
     with pytest.raises(TypeError):
         app.ui.title  # root column is not a panel

@@ -51,7 +51,7 @@ struct UiLock
 sf::Color toColor(nb::handle h, sml::Theme const& theme);
 
 /// Format from a spec: ".3" / ".3f" (decimals), "d" / "04d" (integer, zero-padded), ".1%" (percent),
-/// "duration". Anything after the spec in braces-free text is not supported; use prefix/suffix.
+/// ".2e" (scientific), ".4g" / "g" (shortest, significant digits), "duration".
 sml::ValueFormat toFormat(std::string const& spec);
 
 void bindUi(nb::module_& m);
