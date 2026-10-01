@@ -254,6 +254,7 @@ void bindUi(nb::module_& m)
             "Removes every child (their handles become invalid).")
         .def("__len__", [](ContainerRef const& r) { UiLock l{*r.app}; return containerOf(r.w)->children().size(); });
     bindControls(m, container);
+    bindMl(m, container);
 
     // Exposed for App: root container + lookup.
     m.def("_ui_root", [](nb::object owner) {

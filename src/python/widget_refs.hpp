@@ -10,6 +10,8 @@
 #include <nanobind/stl/vector.h>
 
 #include "py_app.hpp"
+#include "simplyml/ml/cart_pendulum_view.hpp"
+#include "simplyml/ml/network_view.hpp"
 #include "simplyml/ui/controls.hpp"
 #include "simplyml/ui/stats.hpp"
 
@@ -24,6 +26,8 @@ struct WidgetRef
 struct ContainerRef : WidgetRef {};
 struct StatCardRef : WidgetRef {};
 struct ValueRef : WidgetRef {};
+struct NetworkViewRef : WidgetRef {};
+struct CartPendulumRef : WidgetRef {};
 /// A control. Its value is read from the Control Store (no Ui lock), typed by `kind`.
 struct ControlRef : WidgetRef
 {
@@ -74,6 +78,12 @@ inline nb::object wrap(WidgetRef const& base, sml::Widget* w)
     }
     if (dynamic_cast<sml::StatCard*>(w)) {
         return nb::cast(StatCardRef{r});
+    }
+    if (dynamic_cast<sml::NetworkView*>(w)) {
+        return nb::cast(NetworkViewRef{r});
+    }
+    if (dynamic_cast<sml::CartPendulumView*>(w)) {
+        return nb::cast(CartPendulumRef{r});
     }
     if (dynamic_cast<sml::ValueWidget*>(w)) {
         return nb::cast(ValueRef{r});
@@ -163,3 +173,5 @@ inline sml::Theme const& themeOf(WidgetRef const& r) { return r.app->ui.theme();
 
 /// Control classes, control methods on `container`, `Controls` and the key-binding helpers.
 void bindControls(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container);
+/// ML widget classes and their methods on `container`.
+void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container);

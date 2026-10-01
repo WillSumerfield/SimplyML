@@ -13,6 +13,7 @@ dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
 test = ["pytest>=8", "python-xlib>=0.33"]
+torch = ["torch>=2"] # simplyml.mlp_graph(nn.Module)
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
