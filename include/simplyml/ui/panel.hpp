@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <SFML/Graphics/VertexArray.hpp>
 
@@ -18,7 +19,15 @@ public:
     explicit Panel(std::string title = {}, sf::Color accent = sf::Color::Transparent);
 
     Panel& setTitle(std::string title);
+    /// Readout at the top-right, e.g. the latest value.
     Panel& setValueText(std::string text) { m_valueText = std::move(text); return *this; }
+    /// Colored keys at the top-right (drawn left of the readout, if any).
+    struct LegendEntry
+    {
+        std::string text;
+        sf::Color   color;
+    };
+    Panel& setLegend(std::vector<LegendEntry> legend) { m_legend = std::move(legend); return *this; }
     /// Outline color; transparent (the default) uses the theme grey.
     Panel& setAccent(sf::Color accent);
     [[nodiscard]] std::string const& title() const     { return m_title; }
@@ -56,6 +65,7 @@ protected:
 private:
     std::string             m_title;
     std::string             m_valueText;
+    std::vector<LegendEntry> m_legend;
     sf::Color               m_accent;
     std::unique_ptr<Widget> m_content;
     sf::FloatRect           m_contentRect;

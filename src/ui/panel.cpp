@@ -53,7 +53,8 @@ void Panel::onLayout(UiContext const& ctx)
                                       : m_titlePos.y + capHeight(ctx.font, t.pt(t.textTitle)) + t.px(t.titleGap);
     float const left   = b.position.x + out + pad.x;
     float const right  = b.position.x + b.size.x - out - pad.x;
-    float const bottom = b.position.y + b.size.y - out - pad.y;
+    // Untitled panels (tiles) pad evenly; titled ones keep room at the bottom for axis labels.
+    float const bottom = b.position.y + b.size.y - out - (m_title.empty() ? pad.x : pad.y);
     m_contentRect = {{left, top}, {std::max(0.0f, right - left), std::max(0.0f, bottom - top)}};
 
     if (m_content) {
@@ -75,13 +76,27 @@ void Panel::draw(sf::RenderTarget& target, UiContext const& ctx)
     if (!m_title.empty()) {
         drawText(target, ctx.font, m_title, t.pt(t.textTitle), m_titlePos, t.palette.text);
     }
+    sf::FloatRect const b = bounds();
+    float right = b.position.x + b.size.x - t.px(t.outline) - t.padding().x;
+    // Bottom-aligned with the title so different sizes share a baseline.
+    float const base = m_titlePos.y + capHeight(ctx.font, t.pt(t.textTitle));
     if (!m_valueText.empty()) {
-        sf::FloatRect const b = bounds();
-        float const right = b.position.x + b.size.x - t.px(t.outline) - t.padding().x;
-        // Bottom-aligned with the title so different sizes share a baseline.
-        float const base = m_titlePos.y + capHeight(ctx.font, t.pt(t.textTitle));
-        drawText(target, ctx.font, m_valueText, t.pt(t.textValue), {right, base}, t.palette.text, Align::End,
-                 Align::End);
+        auto const r = drawText(target, ctx.font, m_valueText, t.pt(t.textValue), {right, base}, t.palette.text,
+                                Align::End, Align::End);
+        right = r.position.x - t.px(t.gap);
+    }
+    if (!m_legend.empty()) {
+        unsigned const size = t.pt(t.textSmall);
+        float const    box  = capHeight(ctx.font, size);
+        sf::VertexArray keys{sf::PrimitiveType::Triangles};
+        for (auto it = m_legend.rbegin(); it != m_legend.rend(); ++it) {
+            auto const r = drawText(target, ctx.font, it->text, size, {right, base}, t.palette.text, Align::End,
+                                    Align::End);
+            float const x = r.position.x - box - t.px(6.0f);
+            geo::roundedRect(keys, {{x, base - box}, {box, box}}, t.px(2.0f), it->color);
+            right = x - t.px(t.gap);
+        }
+        target.draw(keys);
     }
     drawContent(target, ctx);
     if (m_content && m_content->visible()) {

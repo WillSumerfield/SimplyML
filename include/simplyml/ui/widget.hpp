@@ -36,6 +36,8 @@ struct Length
 
 [[nodiscard]] constexpr Length px(float v) { return {v, 0.0f}; }
 [[nodiscard]] constexpr Length fr(float v) { return {0.0f, v}; }
+/// The widget's natural size (`naturalSize`) along the main axis.
+[[nodiscard]] constexpr Length fit() { return {0.0f, 0.0f}; }
 
 /// Base of everything on screen. A widget owns a rectangle in screen pixels, draws itself into it
 /// and may react to input. Containers place children; leaves draw.
@@ -64,6 +66,9 @@ public:
     void layout(sf::FloatRect bounds, UiContext const& ctx);
     /// Forces `onLayout` on the next `layout`, e.g. after a property change that moves content.
     void invalidate() { m_dirty = true; }
+
+    /// Size the widget needs to show its content, for `fit()` extents (0 = no preference).
+    [[nodiscard]] virtual sf::Vector2f naturalSize(UiContext const&) const { return {}; }
 
     /// Per-frame data pull and animation, before drawing.
     virtual void update(UiContext const&) {}

@@ -33,7 +33,7 @@ float capHeight(sf::Font const& font, unsigned size)
 }
 
 sf::FloatRect drawText(sf::RenderTarget& target, sf::Font const& font, std::string const& str, unsigned size,
-                       sf::Vector2f pos, sf::Color color, Align h, Align v)
+                       sf::Vector2f pos, sf::Color color, Align h, Align v, sf::RenderStates const& states)
 {
     sf::Text text{font, str, size};
     text.setFillColor(color);
@@ -45,9 +45,11 @@ sf::FloatRect drawText(sf::RenderTarget& target, sf::Font const& font, std::stri
     float const ascentTop = static_cast<float>(size) - cap;
     sf::Vector2f p{pos.x + alignOffset(h, local.size.x) - local.position.x,
                    pos.y + alignOffset(v, cap) - ascentTop};
-    p = {std::round(p.x), std::round(p.y)};
+    if (states.transform == sf::Transform::Identity) {
+        p = {std::round(p.x), std::round(p.y)};
+    }
     text.setPosition(p);
-    target.draw(text);
+    target.draw(text, states);
     return {{p.x + local.position.x, p.y + ascentTop}, {local.size.x, cap}};
 }
 

@@ -77,7 +77,15 @@ simplyml_warnings(simplyml_core)
 
 # ui -----------------------------------------------------------------------------------------------
 add_library(simplyml_ui STATIC
+    src/ui/axes.cpp
+    src/ui/bar_chart.cpp
     src/ui/geometry.cpp
+    src/ui/line_chart.cpp
+    src/ui/phase_plot.cpp
+    src/ui/ruler.cpp
+    src/ui/stats.cpp
+    src/ui/tracer.cpp
+    src/ui/value_format.cpp
     src/ui/layout.cpp
     src/ui/panel.cpp
     src/ui/rounded_rect.cpp

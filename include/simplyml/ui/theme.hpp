@@ -54,7 +54,8 @@ struct Theme
     unsigned textTick  = 18; // axis ticks
     unsigned textValue = 20; // readouts
     unsigned textTitle = 24; // panel titles
-    unsigned textBig   = 48; // stat values
+    unsigned textLarge = 40; // stat tile values
+    unsigned textBig   = 48; // stat card headline values
 
     /// Padding inside a panel's body: {radius, 1.5 * radius}.
     [[nodiscard]] sf::Vector2f padding() const { return {px(radius), px(1.5f * radius)}; }

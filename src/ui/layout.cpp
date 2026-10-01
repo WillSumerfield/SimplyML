@@ -41,13 +41,17 @@ void Stack::arrange(UiContext const& ctx)
     sf::FloatRect const inner{b.position + sf::Vector2f{pad, pad},
                               {std::max(0.0f, b.size.x - 2 * pad), std::max(0.0f, b.size.y - 2 * pad)}};
     bool const horizontal = m_axis == Axis::Horizontal;
-
     std::vector<Widget*> shown;
     std::vector<Length>  lengths;
     for (auto& c : m_children) {
         if (c->visible()) {
             shown.push_back(c.get());
-            lengths.push_back(c->extent());
+            Length l = c->extent();
+            if (l.px <= 0.0f && l.fr <= 0.0f) {
+                sf::Vector2f const n = c->naturalSize(ctx);
+                l.px = horizontal ? n.x : n.y;
+            }
+            lengths.push_back(l);
         }
     }
     auto const spans = distribute(lengths, horizontal ? inner.size.x : inner.size.y, gap, m_align);

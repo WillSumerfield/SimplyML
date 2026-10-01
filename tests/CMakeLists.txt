@@ -36,7 +36,9 @@ doctest_discover_tests(test_core PROPERTIES TIMEOUT 60) # App tests open windows
 add_executable(test_ui
     main.cpp
     ui/test_geometry.cpp
-    ui/test_layout.cpp)
+    ui/test_layout.cpp
+    ui/test_render.cpp
+    ui/test_values.cpp)
 target_link_libraries(test_ui PRIVATE SimplyML::ui doctest::doctest)
 simplyml_warnings(test_ui)
 doctest_discover_tests(test_ui PROPERTIES TIMEOUT 60)
