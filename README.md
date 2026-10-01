@@ -1,107 +1,46 @@
 # SimplyML
 
-A small C++17 library for live ML-training dashboards, built on SFML 3, with Python bindings. Training code pushes metrics; SimplyML renders them in dark, rounded, themed widgets.
+A small library for live ML-training dashboards. <br>
+Modified and expanded upon code originally written by Jean Tampon, in [Pendulum-NEAT](https://github.com/johnBuffer/Pendulum-NEAT). <br>
+All credit goes to him, all complaints go to me. 
 
-> Early development. Provides the app shell, metric store, layout, display widgets (charts, stat cards, gauges), interactive controls and ML widgets (network view, cart-pendulum scene, training stats).
+## Quick start
 
-## Build
-
-```sh
-cmake -S . -B build          # Release by default; fetches SFML 3 (static) and doctest
-cmake --build build -j
-ctest --test-dir build       # unit tests + install/find_package round-trip
-```
-
-Linux source builds need the SFML system dependencies: `sudo apt install libx11-dev libxrandr-dev libxcursor-dev libxi-dev libgl1-mesa-dev libudev-dev` (Fedora: `libX11-devel libXrandr-devel libXcursor-devel libXi-devel mesa-libGL-devel systemd-devel`). Windows needs only MSVC. Freetype and HarfBuzz are bundled.
-
-## Use from CMake
-
-```cmake
-find_package(SimplyML REQUIRED)            # after `cmake --install build --prefix <prefix>`
-target_link_libraries(app PRIVATE SimplyML::SimplyML)
-```
-
-Each layer is also its own target, so you can link just what you need: `SimplyML::util` (header-only, no SFML), `SimplyML::core`, `SimplyML::ui` or `SimplyML::ml`.
-
-## Quick look
-
-```cpp
-#include <simplyml/ui/line_chart.hpp>
-#include <simplyml/ui/stats.hpp>
-#include <simplyml/ui/ui.hpp>
-
-sml::App app;                                   // windowed 1600x900 by default
-sml::Ui  ui{app};
-auto& grid = ui.setRoot<sml::Grid>(2);
-grid.add<sml::LineChart>("Loss", "loss");       // widgets bind to store series by name
-grid.add<sml::StatTile>("Epoch", "epoch", sml::ValueFormat::integer(4));
-app.start();                                    // UI on a background thread
-
-for (int step = 0; app.isRunning(); ++step) {
-    app.store().push("loss", step, train());    // safe from any thread
-}
-app.join();
-```
-
-`app.run(update)` instead blocks on the calling thread. Controls (`Button`, `Toggle`, `Slider`, `Select`, `NumberField`, in a `ControlPanel`) publish to `app.controls()`, which training code reads from any thread; `ui.bindKey` adds hotkeys, listed by a `KeyBindings` panel. ML widgets take plain structs through thread-safe setters: `NetworkView::setGraph(LayeredGraph)`, `CartPendulumView::setState(LinkChainState)` (plus faded ghosts), and `TrainingStatsCard` reads what `pushStats(store, TrainingStats)` pushes. See `examples/cpp/dashboard`, `controls`, `layout`, `threaded_training`, `network_view` and `cart_pendulum`.
-
-`examples/pendulum_neat` is the original Pendulum-NEAT app (NEAT evolving double-pendulum balancers) rebuilt on SimplyML: `build/examples/pendulum_neat [--size 2560x1440] [--fullscreen]`; D switches to the demo, H hides the controls.
-
-## Python
-
-Prebuilt wheels (no compiler or system packages needed) are attached to each [GitHub Release](https://github.com/WillSumerfield/SimplyML/releases). Install the one for your platform and Python:
+Grab the wheel for your Python from the [install guide](docs/install.md) (Linux or Windows, Python 3.10+). For Python 3.12+ on Linux, that's:
 
 ```sh
 uv pip install https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp312-abi3-manylinux_2_28_x86_64.whl
 ```
 
-| Platform | Python 3.10 | Python 3.11 | Python 3.12+ |
-|---|---|---|---|
-| Linux x86_64 | [cp310](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp310-cp310-manylinux_2_28_x86_64.whl) | [cp311](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp311-cp311-manylinux_2_28_x86_64.whl) | [abi3](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp312-abi3-manylinux_2_28_x86_64.whl) |
-| Windows x64 | [cp310](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp310-cp310-win_amd64.whl) | [cp311](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp311-cp311-win_amd64.whl) | [abi3](https://github.com/WillSumerfield/SimplyML/releases/download/v0.1.0/simplyml-0.1.0-cp312-abi3-win_amd64.whl) |
-
-For the torch extra: `uv pip install "simplyml[torch] @ <wheel url>"`. Linux wheels use the host's X11 and OpenGL.
-
-From source (needs the system dependencies under Build):
-
-```sh
-uv venv --python 3.12 && uv pip install -e ".[test]"   # builds the C++ core (first build takes ~1 min)
-uv run pytest                                          # X display needed for the window tests
-```
+Then push numbers from your training loop and watch them come in:
 
 ```python
+import math
+import time
+
 import simplyml
 
-app = simplyml.App(title="run 1")
-grid = app.ui.grid(columns=2)
-grid.line_chart("Loss", series=["train_loss", "val_loss"], span=2)
-grid.stat_tile("Epoch", "epoch", fmt="04d")
-panel = grid.control_panel("Controls")
-panel.slider("lr", "Learning rate", lo=1e-5, hi=1e-1, value=1e-3, log=True)
-panel.toggle("pause", "Paused", key="space")
-panel.button("save", "Save checkpoint")
+app = simplyml.App(title="my run")
+app.ui.line_chart("Loss", series="loss")
 
-with app:                                        # UI runs on its own thread
-    for step in range(10_000):
-        if app.controls["pause"]: continue       # control values, readable every step
-        app.store.push("train_loss", train_step(lr=app.controls["lr"]))  # never blocks on rendering
-        for e in app.poll_events():              # control edits, unconsumed keys/mouse, window close
-            if e.name == "save": save()
+with app:  # the window runs on its own thread, so your loop never waits on it
+    for step in range(2000):
+        loss = math.exp(-step / 400)  # your training step goes here
+        app.store.push("loss", loss)
+        time.sleep(0.001)
 ```
 
-ML widgets: `net = grid.network_view("Network")` then `net.set_graph(simplyml.mlp_graph(model, x=sample))` (a torch module, or a list of weight matrices with `activations=`); `grid.cart_pendulum(...)` with `set_state(base, joints, push)`; `grid.training_stats()` with `app.store.push_stats(iteration, best_score=..., ...)`. Torch is optional (`.[torch]`).
+Using C++? See [install](docs/install.md#c) for CMake setup.
 
-Python 3.10+ on Linux or Windows. From source, re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py`, `controls.py` and `network_view.py`.
+## Docs
 
-## Releasing
-
-Bump `version` in `pyproject.toml` (and the wheel links above), commit and push, then run the **release** workflow from the Actions tab. It builds and tests the wheels and sdist, and creates Release `v<version>` with them; it refuses a version whose tag already exists.
+Everything else lives in [docs/](docs/README.md): layouts, widgets, controls you can tweak mid-training, network drawings and the examples.
 
 ## Credits
 
-SimplyML is extracted from [Pendulum-NEAT](https://github.com/johnBuffer/Pendulum-NEAT) by Jean Tampon (johnBuffer), MIT licensed. Its visual style and much of the original rendering code come from that project.
+SimplyML is extracted from [Pendulum-NEAT](https://github.com/johnBuffer/Pendulum-NEAT) by Jean Tampon (johnBuffer), MIT licensed.
 
-The default font is [Share Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) by Carrois Type Design, licensed under the SIL Open Font License 1.1 (`res/fonts/OFL.txt`).
+The default font is [Share Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) by Carrois Type Design, under the SIL Open Font License 1.1 (`res/fonts/OFL.txt`).
 
 ## License
 
