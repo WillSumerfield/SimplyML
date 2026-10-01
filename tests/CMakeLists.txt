@@ -38,6 +38,7 @@ add_executable(test_ui
     main.cpp
     ui/test_geometry.cpp
     ui/test_layout.cpp
+    ui/test_controls.cpp
     ui/test_render.cpp
     ui/test_values.cpp)
 target_link_libraries(test_ui PRIVATE SimplyML::ui doctest::doctest)

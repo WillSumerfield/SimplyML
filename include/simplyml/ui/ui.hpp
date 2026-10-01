@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -7,12 +8,15 @@
 
 #include "simplyml/core/app.hpp"
 #include "simplyml/core/event_bus.hpp"
+#include "simplyml/ui/key_bindings.hpp"
 #include "simplyml/ui/layout.hpp"
 #include "simplyml/ui/theme.hpp"
 #include "simplyml/ui/widget.hpp"
 
 namespace sml
 {
+
+class Control;
 
 /// The widget tree of one App: lays it out to the window (on resize and every frame), updates
 /// and draws it in screen space, and feeds it input at priority 0 (above the camera controls).
@@ -52,6 +56,17 @@ public:
         return *w;
     }
 
+    /// Key shortcut, run on key press when no widget took the key (e.g. a focused text field).
+    /// Without an action it only documents a key handled elsewhere, for KeyBindings legends, and
+    /// the key passes through. Rebinding a key replaces its binding.
+    void bindKey(sf::Keyboard::Key key, std::string description, std::function<void()> action = {});
+    /// `key` triggers the control with this id (press a button, flip a toggle, next option);
+    /// the description defaults to the control's label.
+    void bindKey(sf::Keyboard::Key key, Control const& control, std::string description = {});
+    void bindKey(sf::Keyboard::Key key, std::string description, std::string controlId);
+    void unbindKey(sf::Keyboard::Key key);
+    [[nodiscard]] std::vector<KeyBinding> const& keyBindings() const { return m_keys; }
+
     /// Held by the UI thread for each frame and input event.
     [[nodiscard]] std::recursive_mutex& mutex() { return m_mutex; }
 
@@ -63,12 +78,15 @@ public:
     void frame(sf::RenderTarget& target, double now, float dt, sf::Vector2f mouse);
 
 private:
-    [[nodiscard]] UiContext context(double now, float dt, sf::Vector2f mouse) const;
+    [[nodiscard]] UiContext context(double now, float dt, sf::Vector2f mouse);
+    bool handle(sf::Event const& event);
+    void addBinding(KeyBinding binding);
 
     App&                    m_app;
     std::recursive_mutex    m_mutex;
     Theme                   m_theme;
     std::unique_ptr<Widget> m_root;
+    std::vector<KeyBinding> m_keys;
     std::uint64_t           m_drawId = 0;
     SubscriptionId          m_eventId = 0;
 };

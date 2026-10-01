@@ -18,6 +18,8 @@ struct Palette
     sf::Color blue    = {100, 170, 255};
     sf::Color grey    = {150, 150, 150};
     sf::Color card    = {50, 50, 50};    // panel body
+    sf::Color well    = {32, 32, 32};    // sunken control backgrounds (tracks, fields)
+    sf::Color control = {72, 72, 72};    // raised control bodies (buttons, key caps)
     sf::Color clear   = {80, 80, 80};    // window background
     sf::Color text    = sf::Color::White;
     sf::Color textDim = {150, 150, 150}; // labels, ticks

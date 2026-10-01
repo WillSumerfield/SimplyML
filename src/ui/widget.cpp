@@ -72,6 +72,14 @@ bool Widget::handle(sf::Event const& event, UiContext const& ctx)
     return false;
 }
 
+void Widget::setFocused(bool focused, UiContext const& ctx)
+{
+    if (focused != m_focused) {
+        m_focused = focused;
+        onFocusChanged(focused, ctx);
+    }
+}
+
 Widget* Widget::find(std::string_view id)
 {
     return !id.empty() && m_id == id ? this : nullptr;

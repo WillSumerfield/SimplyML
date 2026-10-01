@@ -18,6 +18,8 @@ Sits on `core`. Widgets draw from a Theme and bound data, never from training co
 - **value_format**: how numbers are shown.
 - **line_chart, bar_chart, phase_plot**: charts of metric series.
 - **stats**: value readouts, gauges, status dots and the cards and tiles holding them.
+- **controls**: buttons, toggles, sliders, selects and number fields, and the panel stacking them.
+- **key_bindings**: hotkeys and the legend panel listing them.
 - **ruler, tracer**: scale and trail drawables for world-space scenes.
 
 ## Language
@@ -108,3 +110,30 @@ A fading trail behind a moving point in a scene.
 
 **Ruler**:
 A labelled scale of major and minor ticks, usually under a scene.
+
+**Control**:
+An interactive widget editing one named value in the Control Store; its name is also its id.
+_Avoid_: Input, parameter widget
+
+**Commit**:
+A user edit of a control: the value is published, a change event is queued and callbacks run. Writes from code don't commit.
+
+**Control Panel**:
+A panel stacking controls, each at its natural height.
+
+**Select**:
+A control choosing one of several options, as a segmented row or a radio list; its value is the option's index.
+_Avoid_: Dropdown, combo box
+
+**Number Field**:
+A control edited by typing a number, applied on Enter or when it loses focus.
+
+**Key Binding**:
+A hotkey registered with the Ui: it runs an action, triggers a control, or only documents a key handled elsewhere.
+_Avoid_: Shortcut, hotkey (in code)
+
+**Trigger**:
+What a bound key does to a control: press a button, flip a toggle, pick the next option.
+
+**Key Bindings Panel**:
+A panel listing every key binding as a key cap and its description.

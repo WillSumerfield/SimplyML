@@ -80,7 +80,9 @@ simplyml_warnings(simplyml_core)
 add_library(simplyml_ui STATIC
     src/ui/axes.cpp
     src/ui/bar_chart.cpp
+    src/ui/controls.cpp
     src/ui/geometry.cpp
+    src/ui/key_bindings.cpp
     src/ui/line_chart.cpp
     src/ui/phase_plot.cpp
     src/ui/ruler.cpp

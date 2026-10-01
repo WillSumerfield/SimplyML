@@ -36,6 +36,17 @@ sf::Color Panel::accentOr(Theme const& theme) const
     return m_accent.a ? m_accent : theme.palette.grey;
 }
 
+float Panel::chromeHeight(UiContext const& ctx) const
+{
+    Theme const&       t   = ctx.theme;
+    float const        out = t.px(t.outline);
+    sf::Vector2f const pad = t.padding();
+    if (m_title.empty()) {
+        return 2.0f * (out + pad.x);
+    }
+    return 2.0f * out + 0.45f * pad.y + capHeight(ctx.font, t.pt(t.textTitle)) + t.px(t.titleGap) + pad.y;
+}
+
 void Panel::onLayout(UiContext const& ctx)
 {
     Theme const&        t   = ctx.theme;

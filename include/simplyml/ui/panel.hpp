@@ -47,6 +47,8 @@ public:
 
     /// Inside the outline and padding, below the title.
     [[nodiscard]] sf::FloatRect contentRect() const { return m_contentRect; }
+    /// Height the outline, title and padding take around the content rect.
+    [[nodiscard]] float chromeHeight(UiContext const& ctx) const;
 
     void    update(UiContext const& ctx) override;
     void    draw(sf::RenderTarget& target, UiContext const& ctx) override;

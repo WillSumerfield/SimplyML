@@ -8,12 +8,16 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include "simplyml/core/control_store.hpp"
+#include "simplyml/core/event_bus.hpp"
 #include "simplyml/core/metric_store.hpp"
 #include "simplyml/ui/theme.hpp"
 #include "simplyml/util/smooth_value.hpp"
 
 namespace sml
 {
+
+struct KeyBinding;
 
 /// What widgets get each frame: the look, the data and the time. UI thread only.
 struct UiContext
@@ -24,6 +28,9 @@ struct UiContext
     double             now = 0.0; // wall time, seconds
     float              dt  = 0.0f;
     sf::Vector2f       mouse;
+    ControlStore*      controls = nullptr; // where controls publish their values (none off-screen)
+    EventBus*          events   = nullptr; // where controls post change events
+    std::vector<KeyBinding> const* keys = nullptr; // the Ui's key bindings, for legends
 };
 
 /// Space a widget asks for along its container's main axis: fixed pixels, a share of what is left
@@ -96,6 +103,8 @@ protected:
     /// Left press and release both inside the widget.
     virtual void onClick(UiContext const&) {}
     virtual void onFocusChanged(bool, UiContext const&) {}
+    /// Gives or drops focus from code (e.g. a text field losing it on Enter).
+    void setFocused(bool focused, UiContext const& ctx);
 
 private:
     std::string   m_id;

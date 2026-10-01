@@ -8,6 +8,8 @@
 
 #include "helpers.hpp"
 #include "simplyml/ui/bar_chart.hpp"
+#include "simplyml/ui/controls.hpp"
+#include "simplyml/ui/key_bindings.hpp"
 #include "simplyml/ui/layout.hpp"
 #include "simplyml/ui/line_chart.hpp"
 #include "simplyml/ui/phase_plot.hpp"
@@ -40,6 +42,15 @@ sml::Grid& buildAll(sml::Grid& grid)
     card.addValue("value", "b");
     card.addGauge("gauge", "a", 0, 10);
     card.addStatus("status", "b");
+    auto& controls = grid.add<sml::ControlPanel>("controls");
+    controls.addButton("button", "Go");
+    controls.addToggle("toggle", "On", true);
+    controls.addSlider("slider", "S", 1e-5, 1e-1, 1e-3).setLog(true);
+    controls.addSelect("select", "Sel", {"a", "b", "c"});
+    controls.add<sml::Select>("radio", "", std::vector<std::string>{"x", "y"}, 1, sml::Select::Style::Radio);
+    controls.addNumber("number", "N", 3.5);
+    controls.add<sml::Select>("empty", "", std::vector<std::string>{});
+    grid.add<sml::KeyBindings>();
     return grid;
 }
 
@@ -88,7 +99,7 @@ TEST_CASE("every widget draws with no data, one point, flat data, NaN and lots o
     frame(grid, rt, t, {{0, 0}, {120, 90}}); // tiny
     frame(grid, rt, t, {{0, 0}, {0, 0}});    // collapsed
     rt.display();
-    CHECK(grid.children().size() == 7);
+    CHECK(grid.children().size() == 9);
 }
 
 TEST_CASE("Ruler and Tracer draw")
