@@ -2,7 +2,7 @@
 
 A small C++17 library for live ML-training dashboards, built on SFML 3, with Python bindings. Training code pushes metrics; SimplyML renders them in dark, rounded, themed widgets.
 
-> Early development. Provides the app shell, metric store, layout and display widgets (charts, stat cards, gauges); interactive controls and ML widgets come next.
+> Early development. Provides the app shell, metric store, layout, display widgets (charts, stat cards, gauges), interactive controls and ML widgets (network view, cart-pendulum scene, training stats).
 
 ## Build
 
@@ -21,7 +21,7 @@ find_package(SimplyML REQUIRED)            # after `cmake --install build --pref
 target_link_libraries(app PRIVATE SimplyML::SimplyML)
 ```
 
-Each layer is also its own target, so you can link just what you need: `SimplyML::util` (header-only, no SFML), `SimplyML::core` or `SimplyML::ui`.
+Each layer is also its own target, so you can link just what you need: `SimplyML::util` (header-only, no SFML), `SimplyML::core`, `SimplyML::ui` or `SimplyML::ml`.
 
 ## Quick look
 
@@ -43,7 +43,7 @@ for (int step = 0; app.isRunning(); ++step) {
 app.join();
 ```
 
-`app.run(update)` instead blocks on the calling thread. Controls (`Button`, `Toggle`, `Slider`, `Select`, `NumberField`, in a `ControlPanel`) publish to `app.controls()`, which training code reads from any thread; `ui.bindKey` adds hotkeys, listed by a `KeyBindings` panel. See `examples/cpp/dashboard`, `controls`, `layout` and `threaded_training`.
+`app.run(update)` instead blocks on the calling thread. Controls (`Button`, `Toggle`, `Slider`, `Select`, `NumberField`, in a `ControlPanel`) publish to `app.controls()`, which training code reads from any thread; `ui.bindKey` adds hotkeys, listed by a `KeyBindings` panel. ML widgets take plain structs through thread-safe setters: `NetworkView::setGraph(LayeredGraph)`, `CartPendulumView::setState(LinkChainState)` (plus faded ghosts), and `TrainingStatsCard` reads what `pushStats(store, TrainingStats)` pushes. See `examples/cpp/dashboard`, `controls`, `layout`, `threaded_training`, `network_view` and `cart_pendulum`.
 
 ## Python
 
@@ -72,7 +72,9 @@ with app:                                        # UI runs on its own thread
             if e.name == "save": save()
 ```
 
-Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py` and `controls.py`.
+ML widgets: `net = grid.network_view("Network")` then `net.set_graph(simplyml.mlp_graph(model, x=sample))` (a torch module, or a list of weight matrices with `activations=`); `grid.cart_pendulum(...)` with `set_state(base, joints, push)`; `grid.training_stats()` with `app.store.push_stats(iteration, best_score=..., ...)`. Torch is optional (`.[torch]`).
+
+Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py`, `controls.py` and `network_view.py`.
 
 ## Credits
 

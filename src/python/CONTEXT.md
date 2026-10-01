@@ -4,13 +4,14 @@ The `simplyml` Python package: the native module plus a thin Pythonic layer. Tra
 
 ## Architecture
 
-Sits on `core` (and later `ui`, `ml`). Exposes the same concepts as C++, renamed to Python conventions.
+Sits on every C++ layer. Exposes the same concepts as C++, renamed to Python conventions.
 
 - **module**: the native module's bindings: App, events, store.
 - **widget_refs**: widget handles and the helpers that create them.
 - **ui_bindings**: the layout and display-widget methods.
 - **control_bindings**: the control methods, control values and key bindings.
-- **python/simplyml**: the importable package wrapping the native module.
+- **ml_bindings**: the ML widget methods and their data setters.
+- **python/simplyml**: the importable package wrapping the native module; `ml` holds the Python Layered Graph and the builders of it.
 
 ## Language
 
@@ -35,3 +36,6 @@ _Avoid_: Proxy, reference
 
 **Format Spec**:
 The short string choosing a Value Format from Python (".3", "04d", ".1%", ".2e", ".4g", "duration").
+
+**Weights Graph**:
+A Layered Graph built from an MLP's weight matrices (or a torch model), with edges valued by weight and nodes by one sample's activations.
