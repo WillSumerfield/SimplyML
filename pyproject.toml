@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Live ML-training dashboards: C++/SFML core with Python bindings"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
@@ -22,11 +22,27 @@ wheel.packages = ["python/simplyml"]
 cmake.build-type = "Release"
 editable.rebuild = false
 install.components = ["python"] # skip the C++ install rules
+wheel.py-api = "cp312" # 3.12+: one abi3 wheel (nanobind STABLE_ABI); older Pythons get per-version wheels
+sdist.exclude = ["examples", "tests", "temp", "build", ".github", "CONTEXT-MAP.md", "**/CONTEXT.md"]
 
 [tool.scikit-build.cmake.define]
 SIMPLYML_BUILD_TESTS = "OFF"
 SIMPLYML_BUILD_EXAMPLES = "OFF"
 SIMPLYML_BUILD_PYTHON = "ON"
+
+[tool.cibuildwheel]
+build = ["cp310-*", "cp311-*", "cp312-*"] # cp312 builds the abi3 wheel
+skip = ["*-musllinux_*", "*_i686", "*-win32"]
+build-verbosity = 1
+test-requires = ["pytest", "python-xlib"]
+test-command = "pytest {project}/tests/python"
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+# SFML window deps; Xvfb + mesa swrast run the window tests in the container.
+# auditwheel vendors Xrandr/Xcursor/Xi/udev; X11/Xext come from the host.
+before-all = "dnf install -y libX11-devel libXrandr-devel libXcursor-devel libXi-devel mesa-libGL-devel systemd-devel xorg-x11-server-Xvfb mesa-dri-drivers"
+test-command = "(Xvfb :99 -screen 0 1280x1024x24 >/dev/null 2>&1 &) && sleep 1 && DISPLAY=:99 pytest {project}/tests/python"
 
 [tool.pytest.ini_options]
 testpaths = ["tests/python"]
