@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # static libs end up in the Python extension
 
 option(SIMPLYML_BUILD_TESTS "Build SimplyML tests" ${PROJECT_IS_TOP_LEVEL})
+option(SIMPLYML_BUILD_EXAMPLES "Build SimplyML examples" ${PROJECT_IS_TOP_LEVEL})
 
 include(FetchContent)
 include(GNUInstallDirs)
@@ -59,10 +60,17 @@ set(SIMPLYML_FONT_CPP ${PROJECT_BINARY_DIR}/generated/default_font.cpp)
 embedFile(${PROJECT_SOURCE_DIR}/res/fonts/ShareTechMono-Regular.ttf ${SIMPLYML_FONT_CPP}
     defaultFontData simplyml/core/default_font.hpp)
 
-add_library(simplyml_core STATIC ${SIMPLYML_FONT_CPP})
+add_library(simplyml_core STATIC
+    src/core/app.cpp
+    src/core/camera.cpp
+    src/core/event_bus.cpp
+    src/core/metric_store.cpp
+    src/core/resources.cpp
+    ${SIMPLYML_FONT_CPP})
 add_library(SimplyML::core ALIAS simplyml_core)
 set_target_properties(simplyml_core PROPERTIES EXPORT_NAME core OUTPUT_NAME simplyml-core)
-target_link_libraries(simplyml_core PUBLIC simplyml_util SFML::Graphics)
+find_package(Threads REQUIRED)
+target_link_libraries(simplyml_core PUBLIC simplyml_util SFML::Graphics Threads::Threads)
 simplyml_warnings(simplyml_core)
 
 # umbrella -----------------------------------------------------------------------------------------
@@ -85,7 +93,10 @@ write_basic_package_version_file(${PROJECT_BINARY_DIR}/SimplyMLConfigVersion.cma
 install(FILES ${PROJECT_BINARY_DIR}/SimplyMLConfig.cmake ${PROJECT_BINARY_DIR}/SimplyMLConfigVersion.cmake
     DESTINATION ${SIMPLYML_CMAKE_DIR})
 
-# tests --------------------------------------------------------------------------------------------
+# examples / tests ---------------------------------------------------------------------------------
+if(SIMPLYML_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 if(SIMPLYML_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

@@ -18,10 +18,19 @@ target_link_libraries(test_util PRIVATE SimplyML::util doctest::doctest)
 simplyml_warnings(test_util)
 doctest_discover_tests(test_util)
 
-add_executable(test_core main.cpp core/test_default_font.cpp)
+add_executable(test_core
+    main.cpp
+    core/test_app.cpp
+    core/test_camera.cpp
+    core/test_clock.cpp
+    core/test_default_font.cpp
+    core/test_event_bus.cpp
+    core/test_metric_store.cpp
+    core/test_resources.cpp
+    core/test_snapshot.cpp)
 target_link_libraries(test_core PRIVATE SimplyML::core doctest::doctest)
 simplyml_warnings(test_core)
-doctest_discover_tests(test_core)
+doctest_discover_tests(test_core PROPERTIES TIMEOUT 60) # App tests open windows
 
 # Package test: install to a temp prefix, then build + run a consumer using find_package(SimplyML).
 set(pkg_prefix ${CMAKE_CURRENT_BINARY_DIR}/pkg-install)

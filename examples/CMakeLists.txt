@@ -1,0 +1,3 @@
+add_executable(threaded_training cpp/threaded_training/main.cpp)
+target_link_libraries(threaded_training PRIVATE SimplyML::SimplyML)
+simplyml_warnings(threaded_training)
