@@ -100,11 +100,22 @@ set_target_properties(simplyml_ui PROPERTIES EXPORT_NAME ui OUTPUT_NAME simplyml
 target_link_libraries(simplyml_ui PUBLIC simplyml_core)
 simplyml_warnings(simplyml_ui)
 
+# ml -----------------------------------------------------------------------------------------------
+add_library(simplyml_ml STATIC
+    src/ml/cart_pendulum_view.cpp
+    src/ml/formats.cpp
+    src/ml/network_view.cpp
+    src/ml/training_stats_card.cpp)
+add_library(SimplyML::ml ALIAS simplyml_ml)
+set_target_properties(simplyml_ml PROPERTIES EXPORT_NAME ml OUTPUT_NAME simplyml-ml)
+target_link_libraries(simplyml_ml PUBLIC simplyml_ui)
+simplyml_warnings(simplyml_ml)
+
 # umbrella -----------------------------------------------------------------------------------------
 add_library(simplyml INTERFACE)
 add_library(SimplyML::SimplyML ALIAS simplyml)
 set_target_properties(simplyml PROPERTIES EXPORT_NAME SimplyML)
-target_link_libraries(simplyml INTERFACE simplyml_util simplyml_core simplyml_ui)
+target_link_libraries(simplyml INTERFACE simplyml_util simplyml_core simplyml_ui simplyml_ml)
 
 # python extension --------------------------------------------------------------------------------
 if(SIMPLYML_BUILD_PYTHON)
@@ -112,7 +123,7 @@ if(SIMPLYML_BUILD_PYTHON)
 endif()
 
 # install / export ---------------------------------------------------------------------------------
-install(TARGETS simplyml_util simplyml_core simplyml_ui simplyml EXPORT SimplyMLTargets)
+install(TARGETS simplyml_util simplyml_core simplyml_ui simplyml_ml simplyml EXPORT SimplyMLTargets)
 install(DIRECTORY include/simplyml DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES LICENSE res/fonts/OFL.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/SimplyML)
 
