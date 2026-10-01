@@ -14,6 +14,7 @@ Sits on `util` and SFML; everything above it receives what it needs from an App 
 - **clock**: wall time and sim time.
 - **metric_store**: named metric series written from any thread.
 - **snapshot**: latest-value state written from any thread.
+- **keys**: stable names for keys and mouse buttons.
 - **default_font**: the embedded default font, so the library needs no files at runtime.
 
 ## Language
@@ -39,6 +40,10 @@ A subscriber claiming an event, so lower-priority subscribers never see it.
 **App Event**:
 A plain record of an unconsumed input or a widget action, queued for code outside the UI thread to poll.
 _Avoid_: Message, notification
+
+**Key Name**:
+The stable lowercase string for a key or mouse button (e.g. "space", "f1", "7", "left"), shared by bindings, legends and Python.
+_Avoid_: Key code, scancode
 
 **World Space**:
 Coordinates of drawn content (e.g. a simulation), shown through the camera.

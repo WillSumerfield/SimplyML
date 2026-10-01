@@ -1,6 +1,6 @@
 # SimplyML
 
-A small C++17 library for live ML-training dashboards, built on SFML 3, with Python bindings planned. Training code pushes metrics; SimplyML renders them in dark, rounded, themed widgets.
+A small C++17 library for live ML-training dashboards, built on SFML 3, with Python bindings. Training code pushes metrics; SimplyML renders them in dark, rounded, themed widgets.
 
 > Early development. Currently provides the `util` and `core` layers (app shell, events, camera, metric store); widgets come next.
 
@@ -39,6 +39,25 @@ app.join();
 ```
 
 `app.run(update)` instead blocks on the calling thread. See `examples/cpp/threaded_training`.
+
+## Python
+
+```sh
+uv venv --python 3.12 && uv pip install -e ".[test]"   # builds the C++ core (first build takes ~1 min)
+uv run pytest                                          # X display needed for the window test
+```
+
+```python
+import simplyml
+
+with simplyml.App(title="run 1") as app:        # UI runs on its own thread
+    for step in range(10_000):
+        app.store.push("loss", train_step())     # cheap; never blocks on rendering
+        for e in app.poll_events():              # unconsumed keys/mouse, window close
+            if e.key == "q": app.close()
+```
+
+Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/hello_window.py`.
 
 ## Credits
 
