@@ -1,0 +1,81 @@
+# Manual release: Actions → release → Run workflow. Builds and tests wheels (Linux + Windows) and the
+# sdist, then creates GitHub Release v<version> (version from pyproject.toml) with them attached.
+name: release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: v
+        run: |
+          v=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then
+            echo "::error::tag v$v already exists; bump version in pyproject.toml"; exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+  ctest:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxrandr-dev libxcursor-dev libxi-dev libgl1-mesa-dev libudev-dev xvfb
+      - run: cmake -S . -B build && cmake --build build -j4
+      - run: xvfb-run -a ctest --test-dir build --output-on-failure
+
+  wheels:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - if: runner.os == 'Windows'
+        uses: ssciwr/setup-mesa-dist-win@v3 # software OpenGL for the window tests
+      - uses: pypa/cibuildwheel@v4.2.1 # config in pyproject.toml [tool.cibuildwheel]
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  sdist:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv build --sdist -o dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  release:
+    needs: [version, ctest, wheels, sdist]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ needs.version.outputs.version }}" dist/* \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "v${{ needs.version.outputs.version }}" --generate-notes
