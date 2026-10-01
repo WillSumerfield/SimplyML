@@ -125,6 +125,7 @@ public:
 
     [[nodiscard]] double lo() const { return m_lo; }
     [[nodiscard]] double hi() const { return m_hi; }
+    [[nodiscard]] double step() const { return m_step; }
     [[nodiscard]] bool   isLog() const { return m_log && m_lo > 0.0; }
     /// Track position in [0, 1] of `v`, and its inverse.
     [[nodiscard]] double ratioOf(double v) const;
@@ -209,6 +210,7 @@ public:
     NumberField& setInteger(bool integer)       { m_integer = integer; return *this; }
     NumberField& setFormat(ValueFormat fmt)     { m_format = std::move(fmt); return *this; }
 
+    [[nodiscard]] bool               integer() const { return m_integer; }
     [[nodiscard]] bool               editing() const { return focused(); }
     [[nodiscard]] std::string const& editText() const { return m_edit; }
     /// Parses `text`; nullopt unless it is a whole finite number within range.
