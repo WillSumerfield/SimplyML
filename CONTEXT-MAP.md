@@ -13,6 +13,8 @@
  1 ├── examples
  2 │   ├── CMakeLists.txt
  2 │   ├── cpp
+ 3 │   │   ├── controls
+ 4 │   │   │   └── main.cpp
  3 │   │   ├── dashboard
  4 │   │   │   └── main.cpp
  3 │   │   ├── layout
@@ -20,6 +22,7 @@
  3 │   │   └── threaded_training
  4 │   │       └── main.cpp
  2 │   └── python
+ 3 │       ├── controls.py
  3 │       ├── hello_window.py
  3 │       └── train_loop_metrics.py
  1 ├── .gitignore
@@ -30,6 +33,7 @@
  4 │       │   ├── camera.hpp
  4 │       │   ├── canvas.hpp
  4 │       │   ├── clock.hpp
+ 4 │       │   ├── control_store.hpp
  4 │       │   ├── default_font.hpp
  4 │       │   ├── event_bus.hpp
  4 │       │   ├── keys.hpp
@@ -40,7 +44,9 @@
  4 │       │   ├── align.hpp
  4 │       │   ├── axes.hpp
  4 │       │   ├── bar_chart.hpp
+ 4 │       │   ├── controls.hpp
  4 │       │   ├── geometry.hpp
+ 4 │       │   ├── key_bindings.hpp
  4 │       │   ├── layout.hpp
  4 │       │   ├── line_chart.hpp
  4 │       │   ├── panel.hpp
@@ -81,6 +87,7 @@
  3 │   │   ├── app.cpp
  3 │   │   ├── camera.cpp
  3 │   │   ├── CONTEXT.md
+ 3 │   │   ├── control_store.cpp
  3 │   │   ├── event_bus.cpp
  3 │   │   ├── keys.cpp
  3 │   │   ├── metric_store.cpp
@@ -90,14 +97,18 @@
  2 │   ├── python
  3 │   │   ├── CMakeLists.txt
  3 │   │   ├── CONTEXT.md
+ 3 │   │   ├── control_bindings.cpp
  3 │   │   ├── module.cpp
  3 │   │   ├── py_app.hpp
- 3 │   │   └── ui_bindings.cpp
+ 3 │   │   ├── ui_bindings.cpp
+ 3 │   │   └── widget_refs.hpp
  2 │   ├── ui
  3 │   │   ├── axes.cpp
  3 │   │   ├── bar_chart.cpp
  3 │   │   ├── CONTEXT.md
+ 3 │   │   ├── controls.cpp
  3 │   │   ├── geometry.cpp
+ 3 │   │   ├── key_bindings.cpp
  3 │   │   ├── layout.cpp
  3 │   │   ├── line_chart.cpp
  3 │   │   ├── panel.cpp
@@ -119,6 +130,7 @@
  3 │   │   ├── test_app.cpp
  3 │   │   ├── test_camera.cpp
  3 │   │   ├── test_clock.cpp
+ 3 │   │   ├── test_control_store.cpp
  3 │   │   ├── test_default_font.cpp
  3 │   │   ├── test_event_bus.cpp
  3 │   │   ├── test_keys.cpp
@@ -131,10 +143,12 @@
  3 │   │   └── main.cpp
  2 │   ├── python
  3 │   │   ├── __pycache__
+ 3 │   │   ├── test_controls.py
  3 │   │   ├── test_smoke.py
  3 │   │   └── test_ui.py
  2 │   ├── ui
  3 │   │   ├── helpers.hpp
+ 3 │   │   ├── test_controls.cpp
  3 │   │   ├── test_geometry.cpp
  3 │   │   ├── test_layout.cpp
  3 │   │   ├── test_render.cpp
@@ -161,6 +175,6 @@ Glossaries live under `src/<layer>/`; public headers for each layer are in `incl
 ## Relationships
 
 - **Layering**: Util → Core → UI → ML; each layer depends only on those before it. Util has no SFML dependency.
-- **Core → UI**: widgets draw with resources and time handed down from the App, never looked up globally.
-- **Python → all layers**: binds the C++ API with Python naming; Python reaches the UI only through the Metric Store, Snapshots and polled App Events.
+- **Core → UI**: widgets draw with resources and time handed down from the App, never looked up globally; controls write the App's Control Store, which training code reads.
+- **Python → all layers**: binds the C++ API with Python naming; Python reaches the UI only through the Metric Store, Snapshots, the Control Store and polled App Events.
 - **ML → UI**: domain widgets are built from UI primitives and consume plain format structs, not training-framework types.

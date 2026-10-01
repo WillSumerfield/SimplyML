@@ -43,7 +43,7 @@ for (int step = 0; app.isRunning(); ++step) {
 app.join();
 ```
 
-`app.run(update)` instead blocks on the calling thread. See `examples/cpp/dashboard`, `layout` and `threaded_training`.
+`app.run(update)` instead blocks on the calling thread. Controls (`Button`, `Toggle`, `Slider`, `Select`, `NumberField`, in a `ControlPanel`) publish to `app.controls()`, which training code reads from any thread; `ui.bindKey` adds hotkeys, listed by a `KeyBindings` panel. See `examples/cpp/dashboard`, `controls`, `layout` and `threaded_training`.
 
 ## Python
 
@@ -59,15 +59,20 @@ app = simplyml.App(title="run 1")
 grid = app.ui.grid(columns=2)
 grid.line_chart("Loss", series=["train_loss", "val_loss"], span=2)
 grid.stat_tile("Epoch", "epoch", fmt="04d")
+panel = grid.control_panel("Controls")
+panel.slider("lr", "Learning rate", lo=1e-5, hi=1e-1, value=1e-3, log=True)
+panel.toggle("pause", "Paused", key="space")
+panel.button("save", "Save checkpoint")
 
 with app:                                        # UI runs on its own thread
     for step in range(10_000):
-        app.store.push("train_loss", train_step())  # cheap; never blocks on rendering
-        for e in app.poll_events():              # unconsumed keys/mouse, window close
-            if e.key == "q": app.close()
+        if app.controls["pause"]: continue       # control values, readable every step
+        app.store.push("train_loss", train_step(lr=app.controls["lr"]))  # never blocks on rendering
+        for e in app.poll_events():              # control edits, unconsumed keys/mouse, window close
+            if e.name == "save": save()
 ```
 
-Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py`.
+Python 3.10–3.12 on Linux or Windows. Re-run `uv pip install -e .` after changing C++ code. See `examples/python/train_loop_metrics.py` and `controls.py`.
 
 ## Credits
 
