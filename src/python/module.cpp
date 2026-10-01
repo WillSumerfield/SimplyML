@@ -115,7 +115,9 @@ NB_MODULE(_core, m)
             "float64 C-contiguous arrays only; use `push_many`.")
         .def("set_max_points", &sml::MetricStore::setMaxPoints, "name"_a, "max_points"_a,
             "Keeps only the newest `max_points` of a series (0 = unlimited, the default).")
-        .def("clear", &sml::MetricStore::clear, "Drops all series.")
+        .def("clear", [](sml::MetricStore& s, std::optional<std::string_view> name) {
+            if (name) s.clear(*name); else s.clear();
+        }, "name"_a = nb::none(), "Drops one series, or all of them.")
         .def("write_csv", [](sml::MetricStore const& s, std::string const& path) { s.writeCsv(path); }, "path"_a,
             "Writes synced points as CSV (`series,step,value`).")
         .def("write_binary", [](sml::MetricStore const& s, std::string const& path) { s.writeBinary(path); }, "path"_a,

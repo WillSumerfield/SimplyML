@@ -59,6 +59,8 @@ public:
     void setMaxPoints(std::string_view name, std::size_t maxPoints);
     /// Drops all series and pending points; applied on the next sync.
     void clear();
+    /// Drops one series (its points and auto-step counter); applied on the next sync.
+    void clear(std::string_view name);
 
     /// UI thread: applies pending writes. Returns true if anything changed.
     bool sync();
@@ -80,6 +82,7 @@ private:
         double                   lastStep  = -1.0;
         std::size_t              maxPoints = 0;
         bool                     maxSet    = false;
+        bool                     cleared   = false;
     };
 
     Pending& pending(std::string_view name); // m_writeMutex held

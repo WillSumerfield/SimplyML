@@ -90,6 +90,15 @@ void MetricStore::clear()
     m_clearRequested = true;
 }
 
+void MetricStore::clear(std::string_view name)
+{
+    std::lock_guard lock{m_writeMutex};
+    Pending& p = pending(name);
+    p.points.clear();
+    p.lastStep = -1.0;
+    p.cleared  = true;
+}
+
 bool MetricStore::sync()
 {
     std::lock_guard readLock{m_readMutex};
@@ -102,13 +111,19 @@ bool MetricStore::sync()
             changed          = true;
         }
         for (auto& [name, p] : m_pending) {
+            if (p.cleared) {
+                m_series.erase(name);
+                p.cleared = false;
+                changed   = true;
+            }
             if (p.points.empty() && !p.maxSet) {
                 continue;
             }
             auto it = m_series.find(name);
             if (it == m_series.end()) {
                 it = m_series.emplace(name, Series{}).first;
-                it->second.m_name = name;
+                it->second.m_name      = name;
+                it->second.m_maxPoints = p.maxPoints; // survives clear(name)
             }
             Series& s = it->second;
             s.m_inbox.swap(p.points); // p.points keeps the inbox's (empty) capacity

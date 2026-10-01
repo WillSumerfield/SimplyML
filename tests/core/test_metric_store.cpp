@@ -140,3 +140,28 @@ TEST_CASE("MetricStore: CSV and binary dumps")
     CHECK(loaded.series("acc")); // untouched on failure
     fs::remove_all(dir);
 }
+
+TEST_CASE("MetricStore: clear(name) drops one series, keeps its max points and others")
+{
+    sml::MetricStore s;
+    s.setMaxPoints("a", 2);
+    s.push("a", 1.0);
+    s.push("a", 2.0);
+    s.push("b", 5.0);
+    s.sync();
+    s.clear("a");
+    s.push("a", 7.0); // after the clear: auto step restarts at 0
+    s.sync();
+    REQUIRE(s.series("a"));
+    CHECK(s.series("a")->size() == 1);
+    CHECK(s.series("a")->last().step == 0.0);
+    CHECK(s.series("b")->size() == 1);
+    for (int i = 0; i < 5; ++i) {
+        s.push("a", 1.0);
+    }
+    s.sync();
+    CHECK(s.series("a")->size() == 2);
+    s.clear("a");
+    s.sync();
+    CHECK(s.series("a") == nullptr);
+}
