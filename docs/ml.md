@@ -8,6 +8,8 @@ Draws a network: one column of nodes per layer, joined by edges, or nodes wherev
 
 Options:
 - `edge_scale=20`: edge width per unit of edge value. Turn it down if your weights are large.
+- `edge_width=(0.1, 1)`: smallest and largest edge width, as fractions (0–1) of the node radius.
+- `edge_alpha=255`: edge opacity (0–255). Lower it to see through dense networks.
 - `max_zoom=1.5`: caps how much a small network is blown up to fill the panel.
 - `footer=False`: hides the layer sizes under the drawing.
 - `vertical=True`: lays the layers out as rows from top to bottom, which suits wide panels and tall layers. First-layer labels go above, last-layer labels below. Placed graphs ignore it.

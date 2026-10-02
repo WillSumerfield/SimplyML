@@ -31,7 +31,7 @@ def test_mlp_graph_from_torch():
 def test_ml_widgets_and_stats():
     app = simplyml.App()
     row = app.ui.row()
-    net = row.network_view("Net", color="white", edge_scale=2, id="net")
+    net = row.network_view("Net", color="white", edge_scale=2, edge_width=(0, 0.5), edge_alpha=120, id="net")
     assert isinstance(net, simplyml.NetworkView) and isinstance(app["net"], simplyml.NetworkView)
     net.set_graph(simplyml.mlp_graph([np.ones((3, 2)), np.ones((1, 3))]))
     net.set_graph(layers=[0, 1], edges=[(0, 1)], values=[0.5, -1], edge_values=[2.0])

@@ -2,10 +2,12 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -114,15 +116,17 @@ void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container)
 
     container
         .def("network_view", [](ContainerRef const& r, std::string title, nb::handle color, float edgeScale,
-                                bool footer, float maxZoom, bool vertical, nb::kwargs kw) {
+                                std::pair<float, float> edgeWidth, int edgeAlpha, bool footer, float maxZoom, bool vertical, nb::kwargs kw) {
             auto o = addTo<sml::NetworkView>(r, kw, std::move(title), toColor(color, themeOf(r)));
             UiLock l{*r.app};
             as<sml::NetworkView>(nb::cast<WidgetRef const&>(o), "network view")
-                .setEdgeScale(edgeScale).setFooter(footer).setMaxZoom(maxZoom).setVertical(vertical);
+                .setEdgeScale(edgeScale).setEdgeWidth(edgeWidth.first, edgeWidth.second)
+                .setEdgeAlpha(static_cast<std::uint8_t>(std::clamp(edgeAlpha, 0, 255))).setFooter(footer).setMaxZoom(maxZoom).setVertical(vertical);
             return o;
-        }, "title"_a = "", "color"_a = nb::none(), "edge_scale"_a = 20.0f, "footer"_a = true, "max_zoom"_a = 1.5f,
+        }, "title"_a = "", "color"_a = nb::none(), "edge_scale"_a = 20.0f,
+            "edge_width"_a = std::pair{0.1f, 1.0f}, "edge_alpha"_a = 255, "footer"_a = true, "max_zoom"_a = 1.5f,
             "vertical"_a = false, "kw"_a,
-            "Network drawing: columns per layer (rows when vertical), or nodes where a PlacedGraph puts them; node fill = |value|, edge width = |value| * edge_scale px; "
+            "Network drawing: columns per layer (rows when vertical), or nodes where a PlacedGraph puts them; node fill = |value|, edge width = |value| * edge_scale px, clamped to edge_width (min, max) as fractions 0-1 of the node radius; edge_alpha 0-255; "
             "green positive, red negative. Feed it with `set_graph` (or `mlp_graph(...)`).")
         .def("image_view", [](ContainerRef const& r, std::string title, nb::handle color, nb::kwargs kw) {
             return addTo<sml::ImageView>(r, kw, std::move(title), toColor(color, themeOf(r)));
