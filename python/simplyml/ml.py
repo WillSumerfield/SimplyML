@@ -9,7 +9,7 @@ import numpy as np
 
 from ._core import CartPendulumView, MetricStore, NetworkView
 
-__all__ = ["LayeredGraph", "mlp_graph"]
+__all__ = ["LayeredGraph", "PlacedGraph", "mlp_graph"]
 
 
 @dataclass
@@ -25,15 +25,33 @@ class LayeredGraph:
     labels: Sequence[str] | None = None
 
 
-def _set_graph(self: NetworkView, graph: LayeredGraph | None = None, **fields) -> None:
-    """Shows `graph` (or a LayeredGraph built from the keyword fields). Thread-safe and cheap
-    when only values change: positions are recomputed only when the topology does."""
-    g = graph if graph is not None else LayeredGraph(**fields)
-    edges = np.asarray(g.edges, dtype=np.int32).reshape(-1, 2)
+@dataclass
+class PlacedGraph:
+    """A network whose node i sits at `positions[i]` = (x, y), in any units with y down; the view
+    fits them to the panel. Edges, values and labels work as in LayeredGraph. Labels go on the
+    side facing away from the graph's center."""
+
+    positions: Sequence[tuple[float, float]] | np.ndarray
+    edges: Sequence[tuple[int, int]] | np.ndarray = ()
+    values: Sequence[float] | None = None
+    edge_values: Sequence[float] | None = None
+    labels: Sequence[str] | None = None
+
+
+def _set_graph(self: NetworkView, graph: LayeredGraph | PlacedGraph | None = None, **fields) -> None:
+    """Shows `graph`, or one built from the keyword fields (`positions=` makes a PlacedGraph,
+    `layers=` a LayeredGraph). Thread-safe and cheap when only values change: positions are
+    recomputed only when the topology does."""
+    if graph is None:
+        graph = PlacedGraph(**fields) if "positions" in fields else LayeredGraph(**fields)
+    edges = np.asarray(graph.edges, dtype=np.int32).reshape(-1, 2)
     as_f32 = lambda v: None if v is None else np.ascontiguousarray(v, dtype=np.float32).reshape(-1)
-    self._set_graph(np.ascontiguousarray(g.layers, dtype=np.int32).reshape(-1), np.ascontiguousarray(edges[:, 0]),
-                    np.ascontiguousarray(edges[:, 1]), as_f32(g.values), as_f32(g.edge_values),
-                    None if g.labels is None else [str(s) for s in g.labels])
+    rest = (np.ascontiguousarray(edges[:, 0]), np.ascontiguousarray(edges[:, 1]), as_f32(graph.values),
+            as_f32(graph.edge_values), None if graph.labels is None else [str(s) for s in graph.labels])
+    if isinstance(graph, PlacedGraph):
+        self._set_placed_graph(np.ascontiguousarray(graph.positions, dtype=np.float32).reshape(-1, 2), *rest)
+    else:
+        self._set_graph(np.ascontiguousarray(graph.layers, dtype=np.int32).reshape(-1), *rest)
 
 
 NetworkView.set_graph = _set_graph

@@ -4,13 +4,13 @@ These widgets show things that aren't plain series: a network's insides, a physi
 
 ## Network view
 
-Draws a layered network: one column of nodes per layer, joined by edges. Values drive the drawing. A node's value is usually its activation, and an edge's value is usually its weight. Positive values are drawn green and negative ones red, and bigger magnitudes are drawn bigger.
+Draws a network: one column of nodes per layer, joined by edges, or nodes wherever you place them. Values drive the drawing. A node's value is usually its activation, and an edge's value is usually its weight. Positive values are drawn green and negative ones red, and bigger magnitudes are drawn bigger.
 
 Options:
 - `edge_scale=20`: edge width per unit of edge value. Turn it down if your weights are large.
 - `max_zoom=1.5`: caps how much a small network is blown up to fill the panel.
 - `footer=False`: hides the layer sizes under the drawing.
-- `vertical=True`: lays the layers out as rows from top to bottom, which suits wide panels and tall layers. First-layer labels go above, last-layer labels below.
+- `vertical=True`: lays the layers out as rows from top to bottom, which suits wide panels and tall layers. First-layer labels go above, last-layer labels below. Placed graphs ignore it.
 
 The easy way to fill it is `simplyml.mlp_graph`. Give it a list of weight matrices shaped `(out, in)`, plus the activations of one sample if you want node values:
 
@@ -40,7 +40,22 @@ net.set_graph(simplyml.mlp_graph(model, x=batch[0]))
 
 For anything that isn't an MLP (NEAT genomes, skip connections...), build a `simplyml.LayeredGraph` yourself. You give it a layer number per node, a list of `(from, to)` edges, and optionally node values, edge values and labels. The view only redoes its layout when the shape of the graph changes, so updating values every step is cheap.
 
-C++: `net.setGraph(sml::LayeredGraph{...})`, with nodes and edges as structs.
+For networks that aren't layered at all (recurrent nets, reservoirs, CPPN substrates...), use a `simplyml.PlacedGraph` and give each node an `(x, y)` position instead of a layer. Any units work, with y pointing down. The view fits the graph to the panel and shrinks nodes so they don't overlap. Every label goes on the node's outer side, and an edge from a node to itself is drawn as a small loop.
+
+```python
+import simplyml
+
+app = simplyml.App()
+net = app.ui.network_view("Recurrent")
+net.set_graph(simplyml.PlacedGraph(
+    positions=[(0, 1), (1, 0), (2, 0), (1, 2), (3, 1)],
+    edges=[(0, 1), (0, 3), (1, 2), (2, 2), (2, 3), (3, 1), (2, 4), (3, 4)],
+    values=[0.5, -0.2, 0.8, 0.1, -0.6], labels=["in", "", "", "", "out"]))
+```
+
+Moving a node redoes the layout, so you can animate positions too. Changing only values stays cheap.
+
+C++: `net.setGraph(sml::LayeredGraph{...})` or `net.setGraph(sml::PlacedGraph{...})`, with nodes and edges as structs.
 
 ## Cart-pendulum
 

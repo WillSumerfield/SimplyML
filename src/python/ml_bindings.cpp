@@ -38,7 +38,7 @@ std::vector<sf::Vector2f> points(float const* p, std::size_t n)
 
 void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container)
 {
-    nb::class_<NetworkViewRef, WidgetRef>(m, "NetworkView", "Layered network drawing (see `set_graph`).")
+    nb::class_<NetworkViewRef, WidgetRef>(m, "NetworkView", "Network drawing, layered or placed (see `set_graph`).")
         .def("_set_graph", [](NetworkViewRef const& r, Ints layers, Ints src, Ints dst, std::optional<Floats> values,
                               std::optional<Floats> edgeValues, std::optional<std::vector<std::string>> labels) {
             std::size_t const n = layers.shape(0), e = src.shape(0);
@@ -60,7 +60,30 @@ void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container)
                 g.edges[i] = {src(i), dst(i), edgeValues ? (*edgeValues)(i) : 0.0f};
             }
             as<sml::NetworkView>(r, "network view").setGraph(std::move(g)); // thread-safe; no Ui lock
-        }, "layers"_a, "src"_a, "dst"_a, "values"_a.none(), "edge_values"_a.none(), "labels"_a.none());
+        }, "layers"_a, "src"_a, "dst"_a, "values"_a.none(), "edge_values"_a.none(), "labels"_a.none())
+        .def("_set_placed_graph", [](NetworkViewRef const& r, Points positions, Ints src, Ints dst,
+                                     std::optional<Floats> values, std::optional<Floats> edgeValues,
+                                     std::optional<std::vector<std::string>> labels) {
+            std::size_t const n = positions.shape(0), e = src.shape(0);
+            if (dst.shape(0) != e || (values && values->shape(0) != n) || (edgeValues && edgeValues->shape(0) != e)
+                || (labels && labels->size() != n)) {
+                throw nb::value_error("set_graph: array lengths don't match");
+            }
+            sml::PlacedGraph g;
+            g.nodes.resize(n);
+            for (std::size_t i = 0; i < n; ++i) {
+                g.nodes[i].position = {positions(i, 0), positions(i, 1)};
+                g.nodes[i].value    = values ? (*values)(i) : 0.0f;
+                if (labels) {
+                    g.nodes[i].label = std::move((*labels)[i]);
+                }
+            }
+            g.edges.resize(e);
+            for (std::size_t i = 0; i < e; ++i) {
+                g.edges[i] = {src(i), dst(i), edgeValues ? (*edgeValues)(i) : 0.0f};
+            }
+            as<sml::NetworkView>(r, "network view").setGraph(std::move(g)); // thread-safe; no Ui lock
+        }, "positions"_a, "src"_a, "dst"_a, "values"_a.none(), "edge_values"_a.none(), "labels"_a.none());
 
     nb::class_<CartPendulumRef, WidgetRef>(m, "CartPendulumView", "Cart-pendulum scene (see `set_state`).")
         .def("_set_state", [](CartPendulumRef const& r, float x, float y, Points joints, float push) {
@@ -90,7 +113,7 @@ void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container)
             return o;
         }, "title"_a = "", "color"_a = nb::none(), "edge_scale"_a = 20.0f, "footer"_a = true, "max_zoom"_a = 1.5f,
             "vertical"_a = false, "kw"_a,
-            "Network drawing: columns per layer (rows when vertical); node fill = |value|, edge width = |value| * edge_scale px; "
+            "Network drawing: columns per layer (rows when vertical), or nodes where a PlacedGraph puts them; node fill = |value|, edge width = |value| * edge_scale px; "
             "green positive, red negative. Feed it with `set_graph` (or `mlp_graph(...)`).")
         .def("cart_pendulum", [](ContainerRef const& r, std::string title, nb::handle color,
                                  std::optional<std::tuple<float, float, float>> rail,

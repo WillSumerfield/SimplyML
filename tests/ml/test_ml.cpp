@@ -85,6 +85,44 @@ TEST_CASE("NetworkView: columns per layer, layers centered, layout only on topol
     CHECK(v.nodeRadius() == doctest::Approx(9.0f * 1.5f));
 }
 
+TEST_CASE("NetworkView: placed graph fits, keeps aspect and spacing, labels face outward")
+{
+    TestUi           t;
+    sml::NetworkView v;
+    sml::PlacedGraph g;
+    g.nodes = {{{0, 0}, 0.5f, "in"}, {{10, 0}, -0.2f, ""}, {{10.5f, 5}, 0.1f, ""}, {{20, 10}, 0.9f, "out"}};
+    g.edges = {{0, 1, 1.0f}, {1, 2, -1.0f}, {2, 2, 0.5f}, {2, 3, 0.3f}};
+    v.setGraph(g);
+    v.update(t.ctx());
+    REQUIRE(v.isPlaced());
+    CHECK(v.graph().nodes.empty());
+    sf::FloatRect const r{{0, 0}, {300, 200}};
+    v.layout(r, t.ctx());
+    auto const& p = v.nodePositions();
+    REQUIRE(p.size() == 4);
+    sf::FloatRect const c = v.contentRect();
+    float const         s = (p[3].x - p[0].x) / 20.0f;
+    CHECK((p[3].y - p[0].y) / 10.0f == doctest::Approx(s)); // aspect kept
+    CHECK(p[0].x - v.nodeRadius() > c.position.x);          // "in" label room on the left
+    CHECK(p[3].x + v.nodeRadius() < c.position.x + c.size.x);
+    float const closest = (p[2] - p[1]).length();
+    CHECK(closest >= 2.0f * v.nodeRadius()); // shrunk so the closest pair doesn't overlap
+
+    auto vals = g;
+    vals.nodes[1].value = 0.7f;
+    v.setGraph(vals);
+    v.update(t.ctx());
+    CHECK(v.placedGraph().nodes[1].value == doctest::Approx(0.7f));
+    CHECK(v.nodePositions()[1] == p[1]); // values only: no relayout needed
+
+    v.setGraph(smallNet()); // back to layered
+    v.update(t.ctx());
+    CHECK_FALSE(v.isPlaced());
+    CHECK(v.placedGraph().nodes.empty());
+    v.layout(r, t.ctx());
+    CHECK(v.nodePositions().size() == 6);
+}
+
 TEST_CASE("CartPendulumView fits the world into the panel")
 {
     TestUi                 t;
@@ -152,6 +190,13 @@ TEST_CASE("ml widgets draw empty, normal, huge and degenerate data")
         }
     }
     big.edges.push_back({0, 999, 1.0f}); // out of range: skipped
+    net.setGraph(big);
+    frame({{0, 0}, {800, 600}});
+    sml::PlacedGraph placed; // coincident nodes, a self-loop, an out-of-range edge
+    placed.nodes = {{{1, 1}, 0.5f, "a"}, {{1, 1}, -0.5f, "b"}, {{1, 1}, 1.0f, ""}};
+    placed.edges = {{0, 0, 1.0f}, {0, 1, 2.0f}, {1, 7, 1.0f}};
+    net.setGraph(placed);
+    frame({{0, 0}, {800, 600}});
     net.setGraph(big);
     sf::Texture wheel{sf::Vector2u{8, 8}};
     cart.setWheelTexture(&wheel);

@@ -27,6 +27,24 @@ bool LayeredGraph::sameTopology(LayeredGraph const& o) const
     return true;
 }
 
+bool PlacedGraph::sameTopology(PlacedGraph const& o) const
+{
+    if (nodes.size() != o.nodes.size() || edges.size() != o.edges.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+        if (nodes[i].position != o.nodes[i].position || nodes[i].label != o.nodes[i].label) {
+            return false;
+        }
+    }
+    for (std::size_t i = 0; i < edges.size(); ++i) {
+        if (edges[i].from != o.edges[i].from || edges[i].to != o.edges[i].to) {
+            return false;
+        }
+    }
+    return true;
+}
+
 int LayeredGraph::layerCount() const
 {
     std::vector<int> layers;

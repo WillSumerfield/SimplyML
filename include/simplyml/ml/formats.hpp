@@ -12,6 +12,14 @@ namespace sml
 
 class MetricStore;
 
+/// An edge of a LayeredGraph or PlacedGraph; `from == to` is a self-loop.
+struct GraphEdge
+{
+    int   from  = 0; // node indices
+    int   to    = 0;
+    float value = 0.0f;
+};
+
 /// A network as layers of nodes joined by edges (an MLP, a NEAT network, ...). Node order inside a
 /// layer is the order of appearance. Values drive color (sign) and size (magnitude): node values
 /// are activations, edge values are weights or the signal they carry.
@@ -23,12 +31,7 @@ struct LayeredGraph
         float       value = 0.0f;
         std::string label; // drawn beside first- and last-layer nodes
     };
-    struct Edge
-    {
-        int   from  = 0; // node indices
-        int   to    = 0;
-        float value = 0.0f;
-    };
+    using Edge = GraphEdge;
 
     std::vector<Node> nodes;
     std::vector<Edge> edges;
@@ -36,6 +39,26 @@ struct LayeredGraph
     /// Same nodes per layer, labels and edge endpoints (values may differ).
     [[nodiscard]] bool sameTopology(LayeredGraph const& o) const;
     [[nodiscard]] int  layerCount() const;
+};
+
+/// A network whose nodes sit where the user puts them (recurrent nets, reservoirs, CPPN substrates,
+/// ...). Positions are in any units, y down; the view fits them to the panel with aspect kept.
+/// Values work as in LayeredGraph.
+struct PlacedGraph
+{
+    struct Node
+    {
+        sf::Vector2f position;
+        float        value = 0.0f;
+        std::string  label; // drawn on the side facing away from the graph's center
+    };
+    using Edge = GraphEdge;
+
+    std::vector<Node> nodes;
+    std::vector<Edge> edges;
+
+    /// Same positions, labels and edge endpoints (values may differ).
+    [[nodiscard]] bool sameTopology(PlacedGraph const& o) const;
 };
 
 /// A chain of rigid links hanging from a base that slides along a rail (cart-pendulum), in world

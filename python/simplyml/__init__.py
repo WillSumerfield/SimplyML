@@ -8,11 +8,11 @@ from . import _core
 from ._core import App as _App
 from ._core import (CartPendulumView, Container, Control, Controls, Event, MetricStore, NetworkView, StatCard,
                     ValueWidget, Widget, key_names)
-from .ml import LayeredGraph, mlp_graph
+from .ml import LayeredGraph, PlacedGraph, mlp_graph
 
 __all__ = [
     "App", "CartPendulumView", "Container", "Control", "Controls", "Event", "LayeredGraph", "MetricStore",
-    "NetworkView", "StatCard", "ValueWidget", "Widget", "key_names", "mlp_graph",
+    "NetworkView", "PlacedGraph", "StatCard", "ValueWidget", "Widget", "key_names", "mlp_graph",
 ]
 
 

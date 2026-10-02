@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <variant>
 #include <vector>
 
 #include <SFML/Graphics/VertexArray.hpp>
@@ -11,11 +12,17 @@
 namespace sml
 {
 
-/// Panel drawing a LayeredGraph: one column per layer, each centered vertically (or, when vertical,
-/// one row per layer top to bottom); nodes as rings filled by |value| (green positive, red negative),
-/// edges as lines whose width follows |value|. First-layer labels go before the first layer (left /
-/// above), last-layer labels after the last (right / below), and a footer counts hidden nodes and
-/// connections. Node positions are cached and only recomputed when the topology changes.
+/// Panel drawing a LayeredGraph or a PlacedGraph; nodes as rings filled by |value| (green positive,
+/// red negative), edges as lines whose width follows |value|, self-loops as small rings outside the
+/// node. Node positions are cached and only recomputed when the topology changes.
+///
+/// Layered: one column per layer, each centered vertically (or, when vertical, one row per layer top
+/// to bottom). First-layer labels go before the first layer (left / above), last-layer labels after
+/// the last (right / below), and a footer counts hidden nodes and connections.
+///
+/// Placed: the nodes' bounding box is fitted to the panel with aspect kept; nodes shrink so the
+/// closest pair keeps a gap. Every label goes on the node's side facing away from the box center,
+/// along the box's longer axis, and the footer counts nodes and connections.
 class NetworkView : public Panel
 {
 public:
@@ -23,6 +30,7 @@ public:
 
     /// Thread-safe: call from the training thread; the view picks it up next frame.
     void setGraph(LayeredGraph graph) { m_input.set(std::move(graph)); }
+    void setGraph(PlacedGraph graph) { m_input.set(std::move(graph)); }
 
     /// Edge width in px at scale 1 is |value| * scale, clamped to [1, node radius] (default 20).
     NetworkView& setEdgeScale(float scale) { m_edgeScale = scale; m_meshDirty = true; return *this; }
@@ -30,10 +38,14 @@ public:
     /// Largest zoom when the panel is bigger than the graph's natural size (default 1.5).
     NetworkView& setMaxZoom(float zoom) { m_maxZoom = zoom; invalidate(); return *this; }
     /// Layers as rows from top to bottom instead of columns from left to right (default false).
+    /// Placed Graphs ignore it.
     NetworkView& setVertical(bool vertical) { m_vertical = vertical; invalidate(); return *this; }
 
-    /// Laid-out graph (UI thread).
+    /// Whether the laid-out graph is a PlacedGraph (UI thread).
+    [[nodiscard]] bool isPlaced() const { return m_isPlaced; }
+    /// Laid-out graph (UI thread); the other kind is empty.
     [[nodiscard]] LayeredGraph const& graph() const { return m_graph; }
+    [[nodiscard]] PlacedGraph const&  placedGraph() const { return m_placed; }
     /// Node centers in screen px, after the last layout (UI thread).
     [[nodiscard]] std::vector<sf::Vector2f> const& nodePositions() const { return m_pos; }
     [[nodiscard]] float nodeRadius() const { return m_radius; }
@@ -53,14 +65,34 @@ private:
         float footerH = 0.0f;
         int   layers = 0, tallest = 0;
     };
+    enum class Side : std::uint8_t { Left, Right, Above, Below };
+    struct Bands // placed label room on each side, incl. gap
+    {
+        float left = 0.0f, right = 0.0f, above = 0.0f, below = 0.0f;
+    };
     [[nodiscard]] Metrics metrics(UiContext const& ctx) const;
+    [[nodiscard]] Bands   bands(UiContext const& ctx) const;
+    [[nodiscard]] float   footerHeight(UiContext const& ctx) const;
+    [[nodiscard]] std::vector<GraphEdge> const& edges() const { return m_isPlaced ? m_placed.edges : m_graph.edges; }
+    [[nodiscard]] std::size_t nodeCount() const { return m_isPlaced ? m_placed.nodes.size() : m_graph.nodes.size(); }
+    [[nodiscard]] float       nodeValue(std::size_t i) const
+    {
+        return m_isPlaced ? m_placed.nodes[i].value : m_graph.nodes[i].value;
+    }
+    void frame(); // placed: bounding box, closest pair, label sides
     void place(UiContext const& ctx);
+    void placePlaced(UiContext const& ctx);
     void rebuildMesh(UiContext const& ctx);
 
-    Snapshot<LayeredGraph> m_input;
+    Snapshot<std::variant<LayeredGraph, PlacedGraph>> m_input;
     std::uint64_t          m_seen = 0;
+    bool                   m_isPlaced = false;
     LayeredGraph           m_graph;
     std::vector<int>       m_layerOf; // normalized layer per node (0..layers-1)
+    PlacedGraph            m_placed;
+    sf::Vector2f           m_min, m_size;     // placed bounding box, user units
+    float                  m_minDist = 0.0f;  // placed closest pair at distinct positions (0 = none)
+    std::vector<Side>      m_side;            // placed label side per node
 
     float m_edgeScale = 20.0f;
     float m_maxZoom   = 1.5f;
@@ -70,6 +102,7 @@ private:
     std::vector<sf::Vector2f> m_pos;
     float                     m_radius = 0.0f;
     float                     m_footerY = 0.0f;
+    sf::Vector2f              m_center; // placed bounding box center in px (self-loops point away from it)
     bool                      m_meshDirty = true;
     sf::VertexArray           m_mesh{sf::PrimitiveType::Triangles};
 };

@@ -38,6 +38,27 @@ def test_ml_widgets_and_stats():
     with pytest.raises(ValueError):
         net._set_graph(np.zeros(2, np.int32), np.zeros(1, np.int32), np.zeros(2, np.int32), None, None, None)
 
+    net.set_graph(simplyml.PlacedGraph([(0, 0), (1, 2)], [(0, 1), (1, 1)], values=[0.5, -1], labels=["a", "b"]))
+    with pytest.raises(ValueError):
+        net._set_placed_graph(np.zeros((2, 2), np.float32), np.zeros(1, np.int32), np.zeros(2, np.int32), None, None,
+                              None)
+
+    class Fake:
+        def __init__(self):
+            self.calls = []
+
+        def _set_graph(self, *a):
+            self.calls.append(("layered", a))
+
+        def _set_placed_graph(self, *a):
+            self.calls.append(("placed", a))
+
+    f = Fake()
+    simplyml.NetworkView.set_graph(f, positions=[(0, 0), (3, 4)], edges=[(0, 1)])
+    simplyml.NetworkView.set_graph(f, layers=[0, 1], edges=[(0, 1)])
+    assert [kind for kind, _ in f.calls] == ["placed", "layered"]
+    assert f.calls[0][1][0].shape == (2, 2) and f.calls[0][1][0].dtype == np.float32
+
     cart = row.cart_pendulum(rail=(220, 720, 225), world=(-25, -25, 990, 500), id="cart")
     assert isinstance(cart, simplyml.CartPendulumView)
     cart.set_state((470, 225), [(470, 325), (470, 425)], push=20)
