@@ -104,6 +104,7 @@ simplyml_warnings(simplyml_ui)
 add_library(simplyml_ml STATIC
     src/ml/cart_pendulum_view.cpp
     src/ml/formats.cpp
+    src/ml/image_view.cpp
     src/ml/network_view.cpp
     src/ml/training_stats_card.cpp)
 add_library(SimplyML::ml ALIAS simplyml_ml)

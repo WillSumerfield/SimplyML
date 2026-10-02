@@ -8,6 +8,7 @@ Sits on `ui`. Formats are plain structs so any training framework can produce th
 
 - **formats**: the data formats and the helper pushing training stats into the Metric Store.
 - **network_view**: the network drawing, for Layered and Placed Graphs.
+- **image_view**: a small picture, e.g. an input sample.
 - **cart_pendulum_view**: the cart-pendulum scene.
 - **training_stats_card**: the stat card preset for training progress.
 
@@ -23,6 +24,10 @@ _Avoid_: Free graph, positioned graph
 
 **Topology**:
 The parts of a graph that place it on screen: its nodes' layers (Layered Graph) or positions (Placed Graph), their labels, and which nodes the edges join. Values are not part of it.
+
+**Image**:
+A small picture fed to or produced by a model, e.g. an input sample or its reconstruction.
+_Avoid_: Frame, texture
 
 **Link Chain State**:
 A snapshot of a chain of rigid links hanging from a base on a rail: the base, the end of each link, and any push on the tip.

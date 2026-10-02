@@ -70,6 +70,14 @@ struct LinkChainState
     float                     push = 0.0f; // horizontal disturbance at the tip (signed, 0 = none)
 };
 
+/// A small picture (an input sample, a reconstruction), row-major RGBA, 4 bytes per pixel.
+struct RgbaImage
+{
+    unsigned                  width  = 0;
+    unsigned                  height = 0;
+    std::vector<std::uint8_t> rgba;
+};
+
 /// Progress of an iterative trainer (generations, epochs).
 struct TrainingStats
 {
