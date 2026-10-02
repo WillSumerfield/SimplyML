@@ -11,6 +11,7 @@
 
 #include "py_app.hpp"
 #include "simplyml/ml/cart_pendulum_view.hpp"
+#include "simplyml/ml/image_view.hpp"
 #include "simplyml/ml/network_view.hpp"
 #include "simplyml/ui/controls.hpp"
 #include "simplyml/ui/stats.hpp"
@@ -27,6 +28,7 @@ struct ContainerRef : WidgetRef {};
 struct StatCardRef : WidgetRef {};
 struct ValueRef : WidgetRef {};
 struct NetworkViewRef : WidgetRef {};
+struct ImageViewRef : WidgetRef {};
 struct CartPendulumRef : WidgetRef {};
 /// A control. Its value is read from the Control Store (no Ui lock), typed by `kind`.
 struct ControlRef : WidgetRef
@@ -81,6 +83,9 @@ inline nb::object wrap(WidgetRef const& base, sml::Widget* w)
     }
     if (dynamic_cast<sml::NetworkView*>(w)) {
         return nb::cast(NetworkViewRef{r});
+    }
+    if (dynamic_cast<sml::ImageView*>(w)) {
+        return nb::cast(ImageViewRef{r});
     }
     if (dynamic_cast<sml::CartPendulumView*>(w)) {
         return nb::cast(CartPendulumRef{r});

@@ -11,6 +11,7 @@
 #include <nanobind/stl/vector.h>
 
 #include "simplyml/ml/cart_pendulum_view.hpp"
+#include "simplyml/ml/image_view.hpp"
 #include "simplyml/ml/network_view.hpp"
 #include "simplyml/ml/training_stats_card.hpp"
 #include "widget_refs.hpp"
@@ -22,6 +23,7 @@ namespace
 
 using Ints    = nb::ndarray<int const, nb::ndim<1>, nb::c_contig, nb::device::cpu>;
 using Floats  = nb::ndarray<float const, nb::ndim<1>, nb::c_contig, nb::device::cpu>;
+using Rgba    = nb::ndarray<std::uint8_t const, nb::shape<-1, -1, 4>, nb::c_contig, nb::device::cpu>;
 using Points  = nb::ndarray<float const, nb::shape<-1, 2>, nb::c_contig, nb::device::cpu>;
 using Points3 = nb::ndarray<float const, nb::shape<-1, -1, 2>, nb::c_contig, nb::device::cpu>;
 
@@ -85,6 +87,13 @@ void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container)
             as<sml::NetworkView>(r, "network view").setGraph(std::move(g)); // thread-safe; no Ui lock
         }, "positions"_a, "src"_a, "dst"_a, "values"_a.none(), "edge_values"_a.none(), "labels"_a.none());
 
+    nb::class_<ImageViewRef, WidgetRef>(m, "ImageView", "Image panel (see `set_image`).")
+        .def("_set_image", [](ImageViewRef const& r, Rgba img) {
+            auto const h = static_cast<unsigned>(img.shape(0)), w = static_cast<unsigned>(img.shape(1));
+            sml::RgbaImage out{w, h, {img.data(), img.data() + std::size_t{w} * h * 4}};
+            as<sml::ImageView>(r, "image view").setImage(std::move(out)); // thread-safe; no Ui lock
+        }, "rgba"_a);
+
     nb::class_<CartPendulumRef, WidgetRef>(m, "CartPendulumView", "Cart-pendulum scene (see `set_state`).")
         .def("_set_state", [](CartPendulumRef const& r, float x, float y, Points joints, float push) {
             sml::LinkChainState s{{x, y}, points(joints.data(), joints.shape(0)), push};
@@ -115,6 +124,10 @@ void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container)
             "vertical"_a = false, "kw"_a,
             "Network drawing: columns per layer (rows when vertical), or nodes where a PlacedGraph puts them; node fill = |value|, edge width = |value| * edge_scale px; "
             "green positive, red negative. Feed it with `set_graph` (or `mlp_graph(...)`).")
+        .def("image_view", [](ContainerRef const& r, std::string title, nb::handle color, nb::kwargs kw) {
+            return addTo<sml::ImageView>(r, kw, std::move(title), toColor(color, themeOf(r)));
+        }, "title"_a = "", "color"_a = nb::none(), "kw"_a,
+            "Image panel: fitted with aspect kept, sharp pixels. Feed it with `set_image`.")
         .def("cart_pendulum", [](ContainerRef const& r, std::string title, nb::handle color,
                                  std::optional<std::tuple<float, float, float>> rail,
                                  std::optional<std::tuple<float, float, float, float>> world, bool ruler,

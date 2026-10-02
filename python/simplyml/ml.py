@@ -7,7 +7,7 @@ from typing import Sequence
 
 import numpy as np
 
-from ._core import CartPendulumView, MetricStore, NetworkView
+from ._core import CartPendulumView, ImageView, MetricStore, NetworkView
 
 __all__ = ["LayeredGraph", "PlacedGraph", "mlp_graph"]
 
@@ -150,3 +150,23 @@ def _torch_mlp(model, x):
             acts.append(calls[end - 1][2][0].numpy())  # last module before the next Linear
     weights = [m.weight.detach().cpu().numpy() for m in linears]
     return weights, [a.astype(np.float32).reshape(-1) for a in acts] if acts else None
+
+
+def _set_image(self: ImageView, image, vmin: float = 0.0, vmax: float = 1.0) -> None:
+    """Shows `image`: (H, W) grey, (H, W, 3) RGB or (H, W, 4) RGBA. uint8 is used as is; anything
+    else maps vmin..vmax to black..white (clipped). Thread-safe."""
+    a = np.asarray(image)
+    if a.dtype != np.uint8:
+        a = (np.clip((a.astype(np.float32) - vmin) / (vmax - vmin), 0, 1) * 255 + 0.5).astype(np.uint8)
+    if a.ndim == 2:
+        a = a[..., None]
+    if a.ndim != 3 or a.shape[2] not in (1, 3, 4):
+        raise ValueError(f"set_image: expected (H, W), (H, W, 3) or (H, W, 4), got {np.shape(image)}")
+    if a.shape[2] == 1:
+        a = np.repeat(a, 3, axis=2)
+    if a.shape[2] == 3:
+        a = np.concatenate([a, np.full(a.shape[:2] + (1,), 255, np.uint8)], axis=2)
+    self._set_image(np.ascontiguousarray(a))
+
+
+ImageView.set_image = _set_image

@@ -85,6 +85,25 @@ scene.set_ghosts([(20.0, 0.0)], [[(40.0, -98.0)]])
 
 C++: `scene.setState(sml::LinkChainState{base, joints, push})` and `setGhosts(...)`. You can also give the cart a wheel image with `setWheelTexture`.
 
+## Image view
+
+Shows a small picture, such as an input sample or a reconstruction. It's scaled to fit the panel with its aspect kept, and pixels stay sharp squares.
+
+```python
+import numpy as np
+
+import simplyml
+
+app = simplyml.App()
+view = app.ui.image_view("Sample")
+view.set_image(np.random.rand(10, 10))                # grey, 0..1
+view.set_image(np.ones((10, 10)) * -1, vmin=-1, vmax=1)  # other ranges
+```
+
+`set_image` takes `(H, W)` grey, `(H, W, 3)` RGB or `(H, W, 4)` RGBA arrays. `uint8` arrays are used as they are; anything else maps `vmin..vmax` to black..white. It's safe to call from any thread.
+
+C++: `view.setImage(sml::RgbaImage{width, height, rgba})`.
+
 ## Training stats
 
 A stat card for iterative training: the iteration, best score, simulated time and real time. Push all of them in one call with `store.push_stats`, then add any extra rows with the usual stat card methods:

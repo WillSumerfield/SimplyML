@@ -6,12 +6,12 @@ import numpy as np
 
 from . import _core
 from ._core import App as _App
-from ._core import (CartPendulumView, Container, Control, Controls, Event, MetricStore, NetworkView, StatCard,
-                    ValueWidget, Widget, key_names)
+from ._core import (CartPendulumView, Container, Control, Controls, Event, ImageView, MetricStore, NetworkView,
+                    StatCard, ValueWidget, Widget, key_names)
 from .ml import LayeredGraph, PlacedGraph, mlp_graph
 
 __all__ = [
-    "App", "CartPendulumView", "Container", "Control", "Controls", "Event", "LayeredGraph", "MetricStore",
+    "App", "CartPendulumView", "Container", "Control", "Controls", "Event", "ImageView", "LayeredGraph", "MetricStore",
     "NetworkView", "PlacedGraph", "StatCard", "ValueWidget", "Widget", "key_names", "mlp_graph",
 ]
 

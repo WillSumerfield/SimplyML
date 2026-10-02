@@ -59,6 +59,14 @@ def test_ml_widgets_and_stats():
     assert [kind for kind, _ in f.calls] == ["placed", "layered"]
     assert f.calls[0][1][0].shape == (2, 2) and f.calls[0][1][0].dtype == np.float32
 
+    img = row.image_view("Img", id="img")
+    assert isinstance(img, simplyml.ImageView) and isinstance(app["img"], simplyml.ImageView)
+    img.set_image(np.eye(4))
+    img.set_image(np.zeros((2, 3, 3), np.uint8))
+    img.set_image(-np.ones((2, 2)), vmin=-1, vmax=1)
+    with pytest.raises(ValueError):
+        img.set_image(np.zeros((2, 2, 2)))
+
     cart = row.cart_pendulum(rail=(220, 720, 225), world=(-25, -25, 990, 500), id="cart")
     assert isinstance(cart, simplyml.CartPendulumView)
     cart.set_state((470, 225), [(470, 325), (470, 425)], push=20)
