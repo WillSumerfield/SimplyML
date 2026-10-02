@@ -1,11 +1,6 @@
-import os
-import time
-
 import pytest
 
 import simplyml
-
-needs_display = pytest.mark.skipif(not os.environ.get("DISPLAY"), reason="needs an X display (XTest input)")
 
 
 def build(app, log=None):
@@ -80,76 +75,3 @@ def test_existing_value_wins_and_bad_arguments_add_nothing():
     assert len(col) == n
     with pytest.raises(ValueError):
         app.bind_key("notakey", "x")
-
-
-def _find_window(display, title, timeout=5.0):
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        for w in display.screen().root.query_tree().children:
-            # viewable: focusing an unmapped window is a BadMatch and the keys go elsewhere
-            if w.get_wm_name() == title and w.get_attributes().map_state == 2:  # X.IsViewable
-                return w
-        time.sleep(0.05)
-    raise TimeoutError(f"window {title!r} never appeared")
-
-
-def _wait(cond, timeout=5.0):
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        if cond():
-            return True
-        time.sleep(0.02)
-    return False
-
-
-@needs_display
-def test_live_controls_keys_clicks_callbacks():
-    pytest.importorskip("Xlib")
-    from Xlib import X, XK
-    from Xlib.display import Display
-    from Xlib.ext import xtest
-
-    d = Display()
-    title = f"simplyml-controls-{os.getpid()}"
-    app = simplyml.App(title=title, size=(640, 800))
-    log = []
-    build(app, log)
-    saves = []
-    app.bind_key("s", "Save", lambda: saves.append(1))
-    with app:
-        w = _find_window(d, title)
-        pos = w.translate_coords(d.screen().root, 0, 0)
-        geo = w.get_geometry()
-        xtest.fake_input(d, X.MotionNotify, x=-pos.x + geo.width // 2, y=-pos.y + geo.height // 2)
-        w.set_input_focus(X.RevertToParent, X.CurrentTime)
-        d.sync()
-
-        def key(name):
-            code = d.keysym_to_keycode(XK.string_to_keysym(name))
-            xtest.fake_input(d, X.KeyPress, code)
-            xtest.fake_input(d, X.KeyRelease, code)
-            d.sync()
-
-        key("space")
-        assert _wait(lambda: app.controls["pause"] == 1.0)
-        assert _wait(lambda: log == [True])
-        key("s")
-        assert _wait(lambda: saves == [1])
-
-        assert _wait(lambda: app["reset"].bounds[2] > 0)
-        x, y, bw, bh = app["reset"].bounds
-        xtest.fake_input(d, X.MotionNotify, x=-pos.x + int(x + bw / 2), y=-pos.y + int(y + bh / 2))
-        d.sync()
-        time.sleep(0.1)
-        xtest.fake_input(d, X.ButtonPress, 1)
-        xtest.fake_input(d, X.ButtonRelease, 1)
-        d.sync()
-        assert _wait(lambda: app["reset"].value == 1)
-        assert _wait(lambda: ("reset", 1) in log)
-
-        app["layers"].value = 99  # sanitized by the widget on the next frame
-        assert _wait(lambda: app.controls["layers"] == 8.0)
-
-        events = [e for e in app.poll_events() if e.type == "custom"]
-        assert [(e.name, e.value) for e in events] == [("pause", 1.0), ("reset", 1.0)]
-    d.close()

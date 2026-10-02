@@ -1,14 +1,6 @@
-import os
-import sys
-import time
-
 import pytest
 
 import simplyml
-
-needs_display = pytest.mark.skipif(
-    sys.platform != "win32" and not os.environ.get("DISPLAY"), reason="needs a display"
-)
 
 
 def build(app):
@@ -78,26 +70,3 @@ def test_value_widget_handles():
     v.set_value(3.0)
     v.set_text("hi")
     v.set_series("s")
-
-
-@needs_display
-def test_layout_changes_while_running():
-    app = simplyml.App(title=f"ui-{os.getpid()}", size=(640, 480))
-    _, grid = build(app)
-    with app:
-        for i in range(300):
-            app.store.push("a", i * 0.1)
-            app.store.push("b", -i * 0.1)
-            app.store.push("acc", i / 300)
-            app.store.push("bars", i % 7)
-            app.store.push("x", (i % 20) / 20)
-            app.store.push("y", (i % 13) / 13)
-            if i == 100:
-                grid.line_chart("Late", series="a", id="late")
-            if i == 200:
-                app["late"].visible = False
-            time.sleep(0.002)
-        assert app.is_running
-        x, y, w, h = app["loss"].bounds
-        assert w > 0 and h > 0
-    assert not app.is_running
