@@ -49,17 +49,17 @@ NetworkView::Metrics NetworkView::metrics(UiContext const& ctx) const
         if (label.empty()) {
             continue;
         }
-        float const w = textSize(ctx.font, label, small).x + t.px(LabelGap);
+        float const w = (m_vertical ? capHeight(ctx.font, small) : textSize(ctx.font, label, small).x) + t.px(LabelGap);
         if (m_layerOf[i] == 0) {
-            m.labelLeft = std::max(m.labelLeft, w);
+            m.labelBefore = std::max(m.labelBefore, w);
         } else if (m_layerOf[i] == m.layers - 1) {
-            m.labelRight = std::max(m.labelRight, w);
+            m.labelAfter = std::max(m.labelAfter, w);
         }
     }
     float const pitch = t.px(2.0f * NodeRadius + Spacing);
     float const node  = 2.0f * t.px(NodeRadius + Ring + Outline);
-    m.graphW = static_cast<float>(m.layers - 1) * pitch + node;
-    m.graphH = static_cast<float>(m.tallest - 1) * pitch + node;
+    m.graphL = static_cast<float>(m.layers - 1) * pitch + node;
+    m.graphN = static_cast<float>(m.tallest - 1) * pitch + node;
     if (m_footer) {
         m.footerH = t.px(24.0f) + 2.0f * capHeight(ctx.font, small) + t.px(8.0f);
     }
@@ -74,7 +74,11 @@ sf::Vector2f NetworkView::naturalSize(UiContext const& ctx) const
     if (m.layers == 0) {
         return {chromeW + t.px(120.0f), chromeHeight(ctx) + t.px(60.0f)};
     }
-    return {chromeW + m.labelLeft + m.graphW + m.labelRight, chromeHeight(ctx) + m.graphH + m.footerH};
+    float const along = m.labelBefore + m.graphL + m.labelAfter;
+    if (m_vertical) {
+        return {chromeW + m.graphN, chromeHeight(ctx) + along + m.footerH};
+    }
+    return {chromeW + along, chromeHeight(ctx) + m.graphN + m.footerH};
 }
 
 void NetworkView::update(UiContext const& ctx)
@@ -127,19 +131,26 @@ void NetworkView::place(UiContext const& ctx)
     if (m.layers == 0) {
         return;
     }
-    float const availW = c.size.x - m.labelLeft - m.labelRight;
-    float const availH = c.size.y - m.footerH;
-    float const zoom   = std::max(0.05f, std::min({m_maxZoom, availW / m.graphW, availH / m.graphH}));
+    // Layout in (L, N): L runs across layers, N along a layer; the footer sits below either way.
+    bool const  vert   = m_vertical;
+    float const posL   = vert ? c.position.y : c.position.x;
+    float const posN   = vert ? c.position.x : c.position.y;
+    float const sizeL  = (vert ? c.size.y : c.size.x) - (vert ? m.footerH : 0.0f);
+    float const sizeN  = (vert ? c.size.x : c.size.y) - (vert ? 0.0f : m.footerH);
+    float const availL = sizeL - m.labelBefore - m.labelAfter;
+    float const zoom   = std::max(0.05f, std::min({m_maxZoom, availL / m.graphL, sizeN / m.graphN}));
     float const pitch = t.px(2.0f * NodeRadius + Spacing) * zoom;
     float const edge  = t.px(NodeRadius + Ring + Outline) * zoom;
-    // Spare width spreads the layers apart (up to 3x), so wide panels don't leave a narrow graph.
-    float const layersW = static_cast<float>(m.layers - 1);
-    float const pitchX  = m.layers > 1 ? std::clamp((availW - 2.0f * edge) / layersW, pitch, 3.0f * pitch) : pitch;
-    float const graphW  = layersW * pitchX + 2.0f * edge;
-    float const blockW  = m.labelLeft + graphW + m.labelRight;
-    float const blockH  = m.graphH * zoom + m.footerH;
-    float const gx      = c.position.x + 0.5f * (c.size.x - blockW) + m.labelLeft;
-    float const gy      = c.position.y + 0.5f * (c.size.y - blockH);
+    // Spare room spreads the layers apart, up to 3x the pitch at max zoom: big layers shrink the node
+    // pitch, but shouldn't also squash the gaps between layers.
+    float const layersL = static_cast<float>(m.layers - 1);
+    float const spreadL = std::max(pitch, 3.0f * t.px(2.0f * NodeRadius + Spacing) * m_maxZoom);
+    float const pitchL  = m.layers > 1 ? std::clamp((availL - 2.0f * edge) / layersL, pitch, spreadL) : pitch;
+    float const graphL  = layersL * pitchL + 2.0f * edge;
+    float const blockL  = m.labelBefore + graphL + m.labelAfter + (vert ? m.footerH : 0.0f);
+    float const blockN  = m.graphN * zoom + (vert ? 0.0f : m.footerH);
+    float const gl      = posL + 0.5f * ((vert ? c.size.y : c.size.x) - blockL) + m.labelBefore;
+    float const gn      = posN + 0.5f * ((vert ? c.size.x : c.size.y) - blockN);
 
     std::vector<int> count(static_cast<std::size_t>(m.layers), 0);
     for (int l : m_layerOf) {
@@ -149,10 +160,12 @@ void NetworkView::place(UiContext const& ctx)
     for (std::size_t i = 0; i < m_graph.nodes.size(); ++i) {
         auto const  l   = static_cast<std::size_t>(m_layerOf[i]);
         float const off = 0.5f * static_cast<float>(m.tallest - count[l]) * pitch;
-        m_pos[i] = {gx + edge + static_cast<float>(l) * pitchX, gy + edge + off + static_cast<float>(seen[l]++) * pitch};
+        float const u   = gl + edge + static_cast<float>(l) * pitchL;
+        float const v   = gn + edge + off + static_cast<float>(seen[l]++) * pitch;
+        m_pos[i] = vert ? sf::Vector2f{v, u} : sf::Vector2f{u, v};
     }
     m_radius  = t.px(NodeRadius) * zoom;
-    m_footerY = gy + m.graphH * zoom;
+    m_footerY = vert ? gl + graphL + m.labelAfter : gn + m.graphN * zoom;
 }
 
 void NetworkView::rebuildMesh(UiContext const& ctx)
@@ -211,9 +224,14 @@ void NetworkView::drawContent(sf::RenderTarget& target, UiContext const& ctx)
         if (label.empty() || (m_layerOf[i] != 0 && m_layerOf[i] != last)) {
             continue;
         }
-        bool const left = m_layerOf[i] == 0;
-        drawText(target, ctx.font, label, small, {m_pos[i].x + (left ? -gap : gap), m_pos[i].y}, t.palette.text,
-                 left ? Align::End : Align::Start, Align::Center);
+        bool const before = m_layerOf[i] == 0;
+        float const d = before ? -gap : gap;
+        Align const a = before ? Align::End : Align::Start;
+        if (m_vertical) {
+            drawText(target, ctx.font, label, small, {m_pos[i].x, m_pos[i].y + d}, t.palette.text, Align::Center, a);
+        } else {
+            drawText(target, ctx.font, label, small, {m_pos[i].x + d, m_pos[i].y}, t.palette.text, a, Align::Center);
+        }
     }
     if (m_footer) {
         int hidden = 0;

@@ -10,6 +10,7 @@ Options:
 - `edge_scale=20`: edge width per unit of edge value. Turn it down if your weights are large.
 - `max_zoom=1.5`: caps how much a small network is blown up to fill the panel.
 - `footer=False`: hides the layer sizes under the drawing.
+- `vertical=True`: lays the layers out as rows from top to bottom, which suits wide panels and tall layers. First-layer labels go above, last-layer labels below.
 
 The easy way to fill it is `simplyml.mlp_graph`. Give it a list of weight matrices shaped `(out, in)`, plus the activations of one sample if you want node values:
 

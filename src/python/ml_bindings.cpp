@@ -82,15 +82,15 @@ void bindMl(nb::module_& m, nb::class_<ContainerRef, WidgetRef>& container)
 
     container
         .def("network_view", [](ContainerRef const& r, std::string title, nb::handle color, float edgeScale,
-                                bool footer, float maxZoom, nb::kwargs kw) {
+                                bool footer, float maxZoom, bool vertical, nb::kwargs kw) {
             auto o = addTo<sml::NetworkView>(r, kw, std::move(title), toColor(color, themeOf(r)));
             UiLock l{*r.app};
             as<sml::NetworkView>(nb::cast<WidgetRef const&>(o), "network view")
-                .setEdgeScale(edgeScale).setFooter(footer).setMaxZoom(maxZoom);
+                .setEdgeScale(edgeScale).setFooter(footer).setMaxZoom(maxZoom).setVertical(vertical);
             return o;
         }, "title"_a = "", "color"_a = nb::none(), "edge_scale"_a = 20.0f, "footer"_a = true, "max_zoom"_a = 1.5f,
-            "kw"_a,
-            "Network drawing: columns per layer; node fill = |value|, edge width = |value| * edge_scale px; "
+            "vertical"_a = false, "kw"_a,
+            "Network drawing: columns per layer (rows when vertical); node fill = |value|, edge width = |value| * edge_scale px; "
             "green positive, red negative. Feed it with `set_graph` (or `mlp_graph(...)`).")
         .def("cart_pendulum", [](ContainerRef const& r, std::string title, nb::handle color,
                                  std::optional<std::tuple<float, float, float>> rail,

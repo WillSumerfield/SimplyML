@@ -11,10 +11,11 @@
 namespace sml
 {
 
-/// Panel drawing a LayeredGraph: one column per layer, each centered vertically; nodes as rings
-/// filled by |value| (green positive, red negative), edges as lines whose width follows |value|.
-/// First-layer labels go on the left, last-layer labels on the right, and a footer counts hidden
-/// nodes and connections. Node positions are cached and only recomputed when the topology changes.
+/// Panel drawing a LayeredGraph: one column per layer, each centered vertically (or, when vertical,
+/// one row per layer top to bottom); nodes as rings filled by |value| (green positive, red negative),
+/// edges as lines whose width follows |value|. First-layer labels go before the first layer (left /
+/// above), last-layer labels after the last (right / below), and a footer counts hidden nodes and
+/// connections. Node positions are cached and only recomputed when the topology changes.
 class NetworkView : public Panel
 {
 public:
@@ -28,6 +29,8 @@ public:
     NetworkView& setFooter(bool footer) { m_footer = footer; invalidate(); return *this; }
     /// Largest zoom when the panel is bigger than the graph's natural size (default 1.5).
     NetworkView& setMaxZoom(float zoom) { m_maxZoom = zoom; invalidate(); return *this; }
+    /// Layers as rows from top to bottom instead of columns from left to right (default false).
+    NetworkView& setVertical(bool vertical) { m_vertical = vertical; invalidate(); return *this; }
 
     /// Laid-out graph (UI thread).
     [[nodiscard]] LayeredGraph const& graph() const { return m_graph; }
@@ -45,8 +48,8 @@ protected:
 private:
     struct Metrics
     {
-        float labelLeft = 0.0f, labelRight = 0.0f; // label columns incl. gap
-        float graphW = 0.0f, graphH = 0.0f;         // nodes only, unzoomed
+        float labelBefore = 0.0f, labelAfter = 0.0f; // label bands along the layer axis, incl. gap
+        float graphL = 0.0f, graphN = 0.0f;          // nodes only, unzoomed: along layers / along a layer
         float footerH = 0.0f;
         int   layers = 0, tallest = 0;
     };
@@ -62,6 +65,7 @@ private:
     float m_edgeScale = 20.0f;
     float m_maxZoom   = 1.5f;
     bool  m_footer    = true;
+    bool  m_vertical  = false;
 
     std::vector<sf::Vector2f> m_pos;
     float                     m_radius = 0.0f;
