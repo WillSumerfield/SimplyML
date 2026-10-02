@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cstdint>
 #include <variant>
 #include <vector>
@@ -32,8 +33,18 @@ public:
     void setGraph(LayeredGraph graph) { m_input.set(std::move(graph)); }
     void setGraph(PlacedGraph graph) { m_input.set(std::move(graph)); }
 
-    /// Edge width in px at scale 1 is |value| * scale, clamped to [1, node radius] (default 20).
+    /// Edge width in px at zoom 1 is |value| * scale, clamped to the edge width range (default 20).
     NetworkView& setEdgeScale(float scale) { m_edgeScale = scale; m_meshDirty = true; return *this; }
+    /// Edge width range as fractions of the node radius, each in [0, 1] (default 0.1 to 1).
+    NetworkView& setEdgeWidth(float min, float max)
+    {
+        m_edgeMin = std::clamp(min, 0.0f, 1.0f);
+        m_edgeMax = std::clamp(max, m_edgeMin, 1.0f);
+        m_meshDirty = true;
+        return *this;
+    }
+    /// Edge opacity, 0-255 (default 255); lower it to see through dense networks.
+    NetworkView& setEdgeAlpha(std::uint8_t alpha) { m_edgeAlpha = alpha; m_meshDirty = true; return *this; }
     NetworkView& setFooter(bool footer) { m_footer = footer; invalidate(); return *this; }
     /// Largest zoom when the panel is bigger than the graph's natural size (default 1.5).
     NetworkView& setMaxZoom(float zoom) { m_maxZoom = zoom; invalidate(); return *this; }
@@ -95,6 +106,9 @@ private:
     std::vector<Side>      m_side;            // placed label side per node
 
     float m_edgeScale = 20.0f;
+    float m_edgeMin   = 0.1f; // fractions of the node radius
+    float m_edgeMax   = 1.0f;
+    std::uint8_t m_edgeAlpha = 255;
     float m_maxZoom   = 1.5f;
     bool  m_footer    = true;
     bool  m_vertical  = false;

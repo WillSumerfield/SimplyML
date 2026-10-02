@@ -337,8 +337,9 @@ void NetworkView::rebuildMesh(UiContext const& ctx)
             continue;
         }
         float const     v     = e.value;
-        sf::Color const color = v > 0.0f ? pal.nnPositive : v < 0.0f ? pal.nnNegative : pal.text;
-        float const     width = std::max(std::clamp(std::abs(v) * m_edgeScale, 1.0f, NodeRadius) * t.px(1.0f) * zoom, 1.0f);
+        sf::Color       color = v > 0.0f ? pal.nnPositive : v < 0.0f ? pal.nnNegative : pal.text;
+        color.a               = static_cast<std::uint8_t>(color.a * m_edgeAlpha / 255);
+        float const     width = std::max(std::clamp(std::abs(v) * m_edgeScale, m_edgeMin * NodeRadius, m_edgeMax * NodeRadius) * t.px(1.0f) * zoom, 1.0f);
         sf::Vector2f const a = m_pos[static_cast<std::size_t>(e.from)];
         if (e.from != e.to) {
             geo::line(m_mesh, a, m_pos[static_cast<std::size_t>(e.to)], width, color);

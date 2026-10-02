@@ -163,6 +163,7 @@ TEST_CASE("ml widgets draw empty, normal, huge and degenerate data")
     TestUi                 t;
     sf::RenderTexture      rt{{800, 600}};
     sml::NetworkView       net{"net"};
+    net.setEdgeWidth(0.0f, 0.5f).setEdgeAlpha(100);
     sml::CartPendulumView cart;
     sml::TrainingStatsCard stats;
     auto frame = [&](sf::FloatRect r) {
